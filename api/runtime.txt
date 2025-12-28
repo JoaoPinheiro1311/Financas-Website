@@ -1,4 +1,0 @@
-# Vercel Runtime Configuration for Python
-# This file is optional but helps with Python version management
-
-runtime = "python3.11"
