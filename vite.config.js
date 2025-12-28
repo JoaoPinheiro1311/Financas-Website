@@ -6,12 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5174,
-    strictPort: false, // Não falha se a porta estiver em uso
+    strictPort: false,
   },
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
   },
 })
 
