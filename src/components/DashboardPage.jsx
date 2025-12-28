@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../config/api'
 import { useNavigate } from 'react-router-dom'
 import Header from './Header'
 import SavingsGoals from './dashboard/SavingsGoals'
@@ -21,7 +22,7 @@ function DashboardPage() {
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/dashboard', {
+      const response = await apiFetch('/api/dashboard', {
         method: 'GET',
         credentials: 'include',
       })
@@ -43,7 +44,7 @@ function DashboardPage() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/logout', {
+      const response = await apiFetch('/api/logout', {
         method: 'POST',
         credentials: 'include',
       })

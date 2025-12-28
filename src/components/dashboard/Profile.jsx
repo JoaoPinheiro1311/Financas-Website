@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../../config/api'
 import { useToast } from '../Toast'
 
 function Profile({ userData }) {
@@ -30,7 +31,7 @@ function Profile({ userData }) {
 
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/api/user/settings', {
+      const response = await apiFetch('/api/user/settings', {
         method: 'GET',
         credentials: 'include',
       })

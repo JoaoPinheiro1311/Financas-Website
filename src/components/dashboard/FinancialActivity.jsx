@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../../config/api'
 
 function FinancialActivity({ userData }) {
   const [data, setData] = useState({
@@ -18,7 +19,7 @@ function FinancialActivity({ userData }) {
   const fetchActivitySummary = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:5000/api/activity-summary', {
+      const response = await apiFetch('/api/activity-summary', {
         method: 'GET',
         credentials: 'include',
       })

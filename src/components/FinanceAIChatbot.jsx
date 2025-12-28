@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../config/api'
 
 export default function FinanceAIChatbot() {
   const [isOpen, setIsOpen] = useState(false)

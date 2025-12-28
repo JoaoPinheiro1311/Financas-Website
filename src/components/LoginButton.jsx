@@ -1,7 +1,9 @@
+import { getLoginUrl } from '../config/api'
+
 function LoginButton() {
   const handleGoogleLogin = () => {
     // Redirecionar para o endpoint de login do Flask
-    window.location.href = 'http://localhost:5000/login/google'
+    window.location.href = getLoginUrl()
   }
 
   return (

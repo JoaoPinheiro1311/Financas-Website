@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../../config/api'
 import { useToast } from '../Toast'
 
 function AddTransaction({ userData }) {
@@ -29,7 +30,7 @@ function AddTransaction({ userData }) {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/categories', {
+      const response = await apiFetch('/api/categories', {
         method: 'GET',
         credentials: 'include',
       })
@@ -63,7 +64,7 @@ function AddTransaction({ userData }) {
 
   const fetchRecentTransactions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/transactions?limit=5', {
+      const response = await apiFetch('/api/transactions?limit=5', {
         method: 'GET',
         credentials: 'include',
       })
@@ -87,7 +88,7 @@ function AddTransaction({ userData }) {
 
   const fetchSummary = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/activity-summary', {
+      const response = await apiFetch('/api/activity-summary', {
         method: 'GET',
         credentials: 'include',
       })

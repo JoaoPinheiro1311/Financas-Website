@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../../config/api'
 import { useToast } from '../Toast'
 import Modal from '../Modal'
 
@@ -33,7 +34,7 @@ function SavingsGoals({ userData }) {
     setError(null)
     
     try {
-      const response = await fetch('http://localhost:5000/api/savings-goals', {
+      const response = await apiFetch('/api/savings-goals', {
         method: 'GET',
         credentials: 'include',
       })

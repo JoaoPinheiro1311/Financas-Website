@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../../config/api'
 import { useToast } from '../Toast'
 
 function FinancialHealth({ userData }) {
@@ -32,7 +33,7 @@ function FinancialHealth({ userData }) {
     setError(null)
     
     try {
-      const response = await fetch('http://localhost:5000/api/financial-health', {
+      const response = await apiFetch('/api/financial-health', {
         method: 'GET',
         credentials: 'include',
       })

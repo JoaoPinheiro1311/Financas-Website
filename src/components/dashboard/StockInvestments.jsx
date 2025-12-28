@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch, API_BASE_URL } from '../../config/api'
 import { useToast } from '../Toast'
 import Modal from '../Modal'
 
@@ -27,7 +28,7 @@ function StockInvestments({ userData }) {
 
   const fetchInvestmentsFromDB = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/investments/stocks', {
+      const response = await apiFetch('/api/investments/stocks', {
         method: 'GET',
         credentials: 'include',
       })
@@ -63,7 +64,7 @@ function StockInvestments({ userData }) {
     setLoadingPrices(prev => ({ ...prev, [investmentId]: true }))
     
     try {
-      const response = await fetch(`http://localhost:5000/api/stock/${symbol}`)
+      const response = await apiFetch('/api/stock/${symbol}')
       if (response.ok) {
         const data = await response.json()
         
@@ -94,7 +95,7 @@ function StockInvestments({ userData }) {
 
     setSearching(true)
     try {
-      const response = await fetch(`http://localhost:5000/api/stocks/search?q=${query}`)
+      const response = await apiFetch('/api/stocks/search?q=${query}')
       if (response.ok) {
         const data = await response.json()
         setSearchResults(data.results || [])
@@ -124,7 +125,7 @@ function StockInvestments({ userData }) {
     
     // Buscar preço atual para sugestão
     try {
-      const response = await fetch(`http://localhost:5000/api/stock/${symbol}`)
+      const response = await apiFetch('/api/stock/${symbol}')
       if (response.ok) {
         const data = await response.json()
         setNewInvestment(prev => ({ ...prev, precoCompra: data.price.toFixed(2) }))
