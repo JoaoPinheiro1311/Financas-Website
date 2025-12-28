@@ -60,7 +60,7 @@ function Profile({ userData }) {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/user/settings', {
+      const response = await apiFetch('/api/user/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

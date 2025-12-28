@@ -172,7 +172,7 @@ function StockInvestments({ userData }) {
       }
 
       try {
-        const response = await fetch('http://localhost:5000/api/investments/stocks', {
+        const response = await apiFetch('/api/investments/stocks', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

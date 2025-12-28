@@ -91,7 +91,7 @@ function SavingsGoals({ userData }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/savings-goals', {
+      const response = await apiFetch('/api/savings-goals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

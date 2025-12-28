@@ -122,7 +122,7 @@ function AddTransaction({ userData }) {
 
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/api/transactions', {
+      const response = await apiFetch('/api/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
