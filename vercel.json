@@ -8,7 +8,11 @@
       "destination": "/api"
     },
     {
-      "source": "/callback/(.*)",
+      "source": "/callback/google",
+      "destination": "/api"
+    },
+    {
+      "source": "/login/google",
       "destination": "/api"
     },
     {
