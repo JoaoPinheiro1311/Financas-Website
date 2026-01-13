@@ -1586,7 +1586,7 @@ def get_ai_response(user_message, conversation_history=None):
             config=genai.types.GenerateContentConfig(
                 temperature=0.6,
                 top_p=0.95,
-                max_output_tokens=400,
+                max_output_tokens=1500,
                 system_instruction=FINANCE_SYSTEM_PROMPT,
                 safety_settings=[
                     genai.types.SafetySetting(
