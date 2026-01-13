@@ -35,15 +35,19 @@ function StockInvestments({ userData }) {
       if (response.ok) {
         const data = await response.json()
         if (data.investments) {
-          setInvestments(data.investments.map(inv => ({
-            id: inv.id,
-            simbolo: inv.symbol,
-            nome: inv.symbol, // Use symbol as name since we don't store it
-            quantidade: inv.quantity,
-            precoCompra: inv.avg_price || 0,
-            precoAtual: inv.last_price || inv.avg_price || 0,
-            variacao: 0,
-          })))
+          setInvestments(data.investments.map(inv => {
+            const precoCompra = inv.avg_price && inv.avg_price > 0 ? inv.avg_price : (inv.last_price || 0)
+            const precoAtual = inv.last_price || inv.avg_price || 0
+            return {
+              id: inv.id,
+              simbolo: inv.symbol,
+              nome: inv.symbol,
+              quantidade: inv.quantity,
+              precoCompra: precoCompra,
+              precoAtual: precoAtual,
+              variacao: precoCompra > 0 ? ((precoAtual - precoCompra) / precoCompra * 100) : 0,
+            }
+          }))
         }
       }
     } catch (error) {
@@ -51,12 +55,25 @@ function StockInvestments({ userData }) {
     }
   }
 
-  // Atualizar preços em tempo real
+  // Atualizar preços em tempo real ao carregar
   useEffect(() => {
-    investments.forEach(investment => {
-      fetchStockPrice(investment.simbolo, investment.id)
-    })
-  }, [investments.length])
+    if (investments.length > 0) {
+      investments.forEach(investment => {
+        fetchStockPrice(investment.simbolo, investment.id)
+      })
+    }
+  }, [])
+
+  // Atualizar preços periodicamente a cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      investments.forEach(investment => {
+        fetchStockPrice(investment.simbolo, investment.id)
+      })
+    }, 30000)
+    
+    return () => clearInterval(interval)
+  }, [investments])
 
   const fetchStockPrice = async (symbol, investmentId) => {
     if (!symbol) return
@@ -71,8 +88,12 @@ function StockInvestments({ userData }) {
         setInvestments(prev => 
           prev.map(inv => {
             if (inv.id === investmentId) {
-              const variacao = ((data.price - inv.precoCompra) / inv.precoCompra * 100)
-              return { ...inv, precoAtual: data.price, variacao: variacao }
+              // Proteger contra divisão por zero e valores inválidos
+              let variacao = 0
+              if (inv.precoCompra && inv.precoCompra > 0) {
+                variacao = ((data.price - inv.precoCompra) / inv.precoCompra * 100)
+              }
+              return { ...inv, precoAtual: data.price, variacao: isNaN(variacao) ? 0 : variacao }
             }
             return inv
           })
