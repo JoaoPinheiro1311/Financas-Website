@@ -251,10 +251,10 @@ function FinancialHealth({ userData }) {
           </div>
         </div>
 
-        {/* Fundo de Emergência */}
+        {/* Dinheiro de Parte */}
         <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-100 hover:border-blue-300 transition-all duration-300 hover:shadow-2xl group">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Fundo Emergência</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Dinheiro de Parte</h3>
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -421,8 +421,8 @@ function FinancialHealth({ userData }) {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-blue-900">🛡️ Construa seu fundo de emergência</p>
-                  <p className="text-xs text-blue-700 mt-1 font-medium">Procure ter pelo menos 6 meses de despesas guardadas para imprevistos. Você está a {(6 - mesesFundoEmergencia).toFixed(1)} meses da meta!</p>
+                  <p className="text-sm font-bold text-blue-900">� Aumente suas poupanças</p>
+                  <p className="text-xs text-blue-700 mt-1 font-medium">É recomendado ter pelo menos 6 meses de despesas guardadas. Você está a {(6 - mesesFundoEmergencia).toFixed(1)} meses da meta!</p>
                 </div>
               </div>
             )}
