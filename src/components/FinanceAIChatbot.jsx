@@ -1,6 +1,69 @@
 import { useState, useRef, useEffect } from 'react'
 import { apiFetch, API_BASE_URL } from '../config/api'
 
+// Função para renderizar texto com formatação Markdown básica
+function formatMessage(text) {
+  // Dividir o texto em linhas
+  const lines = text.split('\n')
+  
+  return lines.map((line, lineIndex) => {
+    // Lista com marcadores (*)
+    if (line.trim().startsWith('* ')) {
+      const content = line.trim().substring(2)
+      return (
+        <li key={lineIndex} className="ml-4 mb-1">
+          {formatInlineText(content)}
+        </li>
+      )
+    }
+    
+    // Linha vazia
+    if (line.trim() === '') {
+      return <br key={lineIndex} />
+    }
+    
+    // Texto normal
+    return (
+      <div key={lineIndex}>
+        {formatInlineText(line)}
+      </div>
+    )
+  })
+}
+
+// Função para formatar texto inline (negrito, etc)
+function formatInlineText(text) {
+  const parts = []
+  let currentIndex = 0
+  
+  // Regex para encontrar **texto** (negrito)
+  const boldRegex = /\*\*(.+?)\*\*/g
+  let match
+  
+  while ((match = boldRegex.exec(text)) !== null) {
+    // Adicionar texto antes do negrito
+    if (match.index > currentIndex) {
+      parts.push(text.substring(currentIndex, match.index))
+    }
+    
+    // Adicionar texto em negrito
+    parts.push(
+      <strong key={match.index} className="font-semibold">
+        {match[1]}
+      </strong>
+    )
+    
+    currentIndex = match.index + match[0].length
+  }
+  
+  // Adicionar o resto do texto
+  if (currentIndex < text.length) {
+    parts.push(text.substring(currentIndex))
+  }
+  
+  return parts.length > 0 ? parts : text
+}
+
 export default function FinanceAIChatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -154,7 +217,9 @@ export default function FinanceAIChatbot() {
                       : 'bg-gray-200 text-gray-900 rounded-bl-none'
                   }`}
                 >
-                  <p className="text-sm">{message.text}</p>
+                  <div className="text-sm whitespace-pre-wrap">
+                    {message.sender === 'bot' ? formatMessage(message.text) : message.text}
+                  </div>
                   <p className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
                     {new Date(message.timestamp).toLocaleTimeString('pt-PT', {
                       hour: '2-digit',
