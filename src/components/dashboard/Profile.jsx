@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { apiFetch, API_BASE_URL } from '../../config/api'
+import { apiFetch } from '../../config/api'
 import { useToast } from '../Toast'
+import { LoadingSpinner } from '../Skeleton'
 
 function Profile({ userData }) {
   const { showToast } = useToast()
@@ -54,7 +55,8 @@ function Profile({ userData }) {
     } catch (error) {
       console.error('Erro ao carregar configurações:', error)
     } finally {
-      setLoading(false)
+      // Pequeno delay para evitar flash
+      setTimeout(() => setLoading(false), 300)
     }
   }
 
@@ -88,21 +90,14 @@ function Profile({ userData }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">A carregar perfil...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary/80">Perfil</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Perfil</p>
           <h2 className="text-3xl font-black text-gray-900">Meu Perfil</h2>
           <p className="text-gray-600 mt-1">Gerencie suas informações pessoais e preferências</p>
         </div>

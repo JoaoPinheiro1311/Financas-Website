@@ -1708,18 +1708,468 @@ def chat():
         return jsonify({'error': str(e)}), 500
 
 
+
+# ====== ORÇAMENTOS (BUDGETS) ======
+
+@app.route('/api/budgets', methods=['GET'])
+def get_budgets():
+    """Busca os orçamentos do utilizador com progresso de gastos"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        from datetime import datetime
+        month = request.args.get('month', datetime.now().strftime('%Y-%m'))
+
+        # Buscar orçamentos
+        budgets_resp = supabase.table('budgets').select('*').eq('user_id', user_id).eq('month', month).execute()
+        budgets = budgets_resp.data or []
+
+        # Buscar despesas do mês para calcular progresso
+        start_date = f"{month}-01"
+        # último dia do mês
+        year, m = map(int, month.split('-'))
+        import calendar
+        last_day = calendar.monthrange(year, m)[1]
+        end_date = f"{month}-{last_day:02d}"
+
+        expenses_resp = supabase.table('expenses').select('amount, categories(name)').eq('user_id', user_id).eq('type', 'expense').gte('date', start_date).lte('date', end_date).execute()
+        expenses = expenses_resp.data or []
+
+        # Agrupar gastos por categoria
+        spent_by_category = {}
+        for e in expenses:
+            cat = (e.get('categories') or {}).get('name', 'Outros')
+            spent_by_category[cat] = spent_by_category.get(cat, 0) + float(e['amount'])
+
+        # Juntar orçamentos com gastos
+        result = []
+        for b in budgets:
+            spent = spent_by_category.get(b['category'], 0)
+            limit = float(b['amount'])
+            percent = round((spent / limit * 100), 1) if limit > 0 else 0
+            result.append({
+                'id': b['id'],
+                'category': b['category'],
+                'amount': limit,
+                'spent': round(spent, 2),
+                'percent': percent,
+                'month': b['month'],
+            })
+
+        # Adicionar categorias com gastos mas sem orçamento
+        budgeted_cats = {b['category'] for b in budgets}
+        unbudgeted = []
+        for cat, spent in spent_by_category.items():
+            if cat not in budgeted_cats:
+                unbudgeted.append({'category': cat, 'spent': round(spent, 2), 'amount': None, 'percent': None, 'id': None, 'month': month})
+
+        return jsonify({'budgets': result, 'unbudgeted': unbudgeted}), 200
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/budgets', methods=['POST'])
+def create_or_update_budget():
+    """Cria ou atualiza um orçamento para uma categoria/mês"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        from datetime import datetime
+        data = request.get_json()
+        category = data.get('category')
+        amount = data.get('amount')
+        month = data.get('month', datetime.now().strftime('%Y-%m'))
+
+        if not category or amount is None:
+            return jsonify({'error': 'category and amount are required'}), 400
+
+        # Upsert (insert ou update se já existir)
+        resp = supabase.table('budgets').upsert({
+            'user_id': user_id,
+            'category': category,
+            'amount': float(amount),
+            'month': month
+        }, on_conflict='user_id,category,month').execute()
+
+        if resp.data:
+            return jsonify({'budget': resp.data[0], 'message': 'Orçamento guardado com sucesso'}), 201
+        return jsonify({'error': 'Failed to save budget'}), 500
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/budgets/<int:budget_id>', methods=['DELETE'])
+def delete_budget(budget_id):
+    """Remove um orçamento"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        check = supabase.table('budgets').select('user_id').eq('id', budget_id).execute()
+        if not check.data or check.data[0]['user_id'] != user_id:
+            return jsonify({'error': 'Not found or unauthorized'}), 404
+
+        supabase.table('budgets').delete().eq('id', budget_id).execute()
+        return jsonify({'message': 'Orçamento removido'}), 200
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+# ====== SUBSCRIÇÕES (SUBSCRIPTIONS) ======
+
+@app.route('/api/subscriptions', methods=['GET'])
+def get_subscriptions():
+    """Busca as subscrições do utilizador com dias até próximo débito"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        from datetime import datetime
+        resp = supabase.table('subscriptions').select('*').eq('user_id', user_id).order('billing_day').execute()
+        subs = resp.data or []
+
+        today = datetime.now()
+        result = []
+        for s in subs:
+            billing_day = s.get('billing_day', 1)
+            # Calcular próxima data de débito
+            if today.day <= billing_day:
+                next_billing = today.replace(day=billing_day)
+            else:
+                # Próximo mês
+                if today.month == 12:
+                    next_billing = today.replace(year=today.year + 1, month=1, day=billing_day)
+                else:
+                    next_billing = today.replace(month=today.month + 1, day=billing_day)
+
+            days_until = (next_billing.date() - today.date()).days
+
+            result.append({
+                'id': s['id'],
+                'name': s['name'],
+                'amount': float(s['amount']),
+                'billing_day': billing_day,
+                'category': s.get('category', 'Serviços'),
+                'is_active': s.get('is_active', True),
+                'color': s.get('color', '#3B82F6'),
+                'days_until': days_until,
+                'next_billing': next_billing.strftime('%Y-%m-%d'),
+            })
+
+        total_monthly = sum(s['amount'] for s in result if s['is_active'])
+
+        return jsonify({'subscriptions': result, 'total_monthly': round(total_monthly, 2)}), 200
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/subscriptions', methods=['POST'])
+def create_subscription():
+    """Cria uma nova subscrição"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        data = request.get_json()
+        required = ['name', 'amount', 'billing_day']
+        if not all(data.get(f) for f in required):
+            return jsonify({'error': f'Required fields: {required}'}), 400
+
+        insert_data = {
+            'user_id': user_id,
+            'name': data['name'],
+            'amount': float(data['amount']),
+            'billing_day': int(data['billing_day']),
+            'category': data.get('category', 'Serviços'),
+            'is_active': data.get('is_active', True),
+            'color': data.get('color', '#3B82F6'),
+        }
+        resp = supabase.table('subscriptions').insert(insert_data).execute()
+        if resp.data:
+            return jsonify({'subscription': resp.data[0], 'message': 'Subscrição criada com sucesso'}), 201
+        return jsonify({'error': 'Failed to create subscription'}), 500
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/subscriptions/<int:sub_id>', methods=['PUT'])
+def update_subscription(sub_id):
+    """Atualiza uma subscrição"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        check = supabase.table('subscriptions').select('user_id').eq('id', sub_id).execute()
+        if not check.data or check.data[0]['user_id'] != user_id:
+            return jsonify({'error': 'Not found or unauthorized'}), 404
+
+        data = request.get_json()
+        update_data = {}
+        for field in ['name', 'category', 'color', 'is_active']:
+            if field in data:
+                update_data[field] = data[field]
+        for field in ['amount']:
+            if field in data:
+                update_data[field] = float(data[field])
+        for field in ['billing_day']:
+            if field in data:
+                update_data[field] = int(data[field])
+
+        resp = supabase.table('subscriptions').update(update_data).eq('id', sub_id).execute()
+        if resp.data:
+            return jsonify({'subscription': resp.data[0], 'message': 'Subscrição atualizada'}), 200
+        return jsonify({'error': 'Failed to update'}), 500
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/subscriptions/<int:sub_id>', methods=['DELETE'])
+def delete_subscription(sub_id):
+    """Remove uma subscrição"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        check = supabase.table('subscriptions').select('user_id').eq('id', sub_id).execute()
+        if not check.data or check.data[0]['user_id'] != user_id:
+            return jsonify({'error': 'Not found or unauthorized'}), 404
+
+        supabase.table('subscriptions').delete().eq('id', sub_id).execute()
+        return jsonify({'message': 'Subscrição removida'}), 200
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+# ====== EXPORTAÇÃO DE RELATÓRIOS ======
+
+@app.route('/api/export/csv', methods=['GET'])
+def export_csv():
+    """Exporta transações do utilizador como ficheiro CSV"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        import csv, io
+        from flask import Response
+        from datetime import datetime
+
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        if not start_date:
+            today = datetime.now()
+            start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        if not end_date:
+            from datetime import timedelta
+            today = datetime.now()
+            next_month = today.replace(day=28) + timedelta(days=4)
+            end_date = (next_month - timedelta(days=next_month.day)).strftime('%Y-%m-%d')
+
+        resp = supabase.table('expenses').select('date, amount, type, notes, categories(name)').eq('user_id', user_id).gte('date', start_date).lte('date', end_date).order('date', desc=True).execute()
+        transactions = resp.data or []
+
+        output = io.StringIO()
+        writer = csv.writer(output, delimiter=';')
+        writer.writerow(['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor (€)'])
+
+        for t in transactions:
+            writer.writerow([
+                t['date'],
+                t.get('notes', ''),
+                (t.get('categories') or {}).get('name', 'Outros'),
+                'Receita' if t['type'] == 'income' else 'Despesa',
+                f"{float(t['amount']):.2f}".replace('.', ','),
+            ])
+
+        output.seek(0)
+        filename = f"relatorio_{start_date}_{end_date}.csv"
+        return Response(
+            output.getvalue().encode('utf-8-sig'),  # BOM para Excel PT
+            mimetype='text/csv',
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
+        )
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/export/pdf', methods=['GET'])
+def export_pdf():
+    """Exporta um relatório financeiro em PDF usando reportlab"""
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    if not supabase:
+        return jsonify({'error': 'Database not configured'}), 500
+
+    try:
+        import io
+        from flask import Response
+        from datetime import datetime, timedelta
+
+        # Tentar importar reportlab
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib import colors
+            from reportlab.lib.units import cm
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.enums import TA_CENTER
+        except ImportError:
+            return jsonify({'error': 'reportlab not installed. Run: pip install reportlab'}), 500
+
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        if not start_date:
+            today = datetime.now()
+            start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        if not end_date:
+            today = datetime.now()
+            next_month = today.replace(day=28) + timedelta(days=4)
+            end_date = (next_month - timedelta(days=next_month.day)).strftime('%Y-%m-%d')
+
+        resp = supabase.table('expenses').select('date, amount, type, notes, categories(name)').eq('user_id', user_id).gte('date', start_date).lte('date', end_date).order('date', desc=True).execute()
+        transactions = resp.data or []
+
+        total_income = sum(float(t['amount']) for t in transactions if t['type'] == 'income')
+        total_expense = sum(float(t['amount']) for t in transactions if t['type'] == 'expense')
+        balance = total_income - total_expense
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm, leftMargin=2*cm, rightMargin=2*cm)
+        styles = getSampleStyleSheet()
+        story = []
+
+        # Título
+        title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=20, textColor=colors.HexColor('#0F172A'), alignment=TA_CENTER)
+        story.append(Paragraph('Relatório Financeiro', title_style))
+        story.append(Paragraph(f'{start_date} — {end_date}', ParagraphStyle('sub', parent=styles['Normal'], fontSize=11, textColor=colors.HexColor('#64748B'), alignment=TA_CENTER)))
+        story.append(Spacer(1, 0.5*cm))
+
+        # Resumo
+        summary_data = [
+            ['Receitas', 'Despesas', 'Saldo'],
+            [f'€ {total_income:,.2f}', f'€ {total_expense:,.2f}', f'€ {balance:,.2f}'],
+        ]
+        summary_table = Table(summary_data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0F172A')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, 1), 13),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.HexColor('#10B981')),
+            ('TEXTCOLOR', (1, 1), (1, 1), colors.HexColor('#EF4444')),
+            ('TEXTCOLOR', (2, 1), (2, 1), colors.HexColor('#3B82F6') if balance >= 0 else colors.HexColor('#EF4444')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#F8FAFC')]),
+            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#E2E8F0')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 0.5*cm))
+
+        # Tabela de transações
+        story.append(Paragraph('Detalhe de Transações', ParagraphStyle('section', parent=styles['Heading2'], fontSize=13, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 0.3*cm))
+
+        table_data = [['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor (€)']]
+        for t in transactions:
+            tipo = 'Receita' if t['type'] == 'income' else 'Despesa'
+            table_data.append([
+                t['date'],
+                (t.get('notes') or '')[:35],
+                (t.get('categories') or {}).get('name', 'Outros'),
+                tipo,
+                f"{'+ ' if t['type']=='income' else '- '}€ {float(t['amount']):,.2f}",
+            ])
+
+        trans_table = Table(table_data, colWidths=[2.5*cm, 6*cm, 3.5*cm, 2*cm, 2.5*cm])
+        trans_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0F172A')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('ALIGN', (4, 0), (4, -1), 'RIGHT'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')]),
+            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#E2E8F0')),
+            ('GRID', (0, 0), (-1, -1), 0.3, colors.HexColor('#E2E8F0')),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(trans_table)
+
+        doc.build(story)
+        buffer.seek(0)
+        filename = f"relatorio_{start_date}_{end_date}.pdf"
+        return Response(
+            buffer.getvalue(),
+            mimetype='application/pdf',
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
+        )
+
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     # Verificar se variáveis de ambiente estão configuradas
     required_vars = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
-    
+
     if missing_vars:
         print(f"[WARNING] Missing environment variables: {', '.join(missing_vars)}")
         print("Please set them in a .env file or environment variables")
-    
+
     # Detectar se estamos em Vercel
     is_vercel = os.getenv('VERCEL') == '1'
-    
+
     # Em Vercel, não iniciar servidor (serverless)
     if not is_vercel:
         print("\n" + "="*50)
@@ -1731,6 +2181,7 @@ if __name__ == '__main__':
         print("="*50)
         print("[INFO] Mantenha este terminal aberto!")
         print("="*50 + "\n")
-        
+
         app.run(debug=True, port=5000, host='127.0.0.1')
+
 

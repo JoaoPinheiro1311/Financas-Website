@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { apiFetch, API_BASE_URL } from '../../config/api'
+import { apiFetch } from '../../config/api'
 import { useToast } from '../Toast'
 import Modal from '../Modal'
+import { LoadingSpinner } from '../Skeleton'
 
 function StockInvestments({ userData }) {
   const { showToast } = useToast()
   const [investments, setInvestments] = useState([])
+  const [loading, setLoading] = useState(true)
   const [loadingPrices, setLoadingPrices] = useState({})
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -27,6 +29,7 @@ function StockInvestments({ userData }) {
   }, [userData])
 
   const fetchInvestmentsFromDB = async () => {
+    setLoading(true)
     try {
       const response = await apiFetch('/api/investments/stocks', {
         method: 'GET',
@@ -52,6 +55,9 @@ function StockInvestments({ userData }) {
       }
     } catch (error) {
       console.error('Erro ao carregar investimentos:', error)
+    } finally {
+      // Pequeno delay para evitar flash
+      setTimeout(() => setLoading(false), 300)
     }
   }
 
@@ -71,21 +77,21 @@ function StockInvestments({ userData }) {
         fetchStockPrice(investment.simbolo, investment.id)
       })
     }, 30000)
-    
+
     return () => clearInterval(interval)
   }, [investments])
 
   const fetchStockPrice = async (symbol, investmentId) => {
     if (!symbol) return
-    
+
     setLoadingPrices(prev => ({ ...prev, [investmentId]: true }))
-    
+
     try {
       const response = await apiFetch(`/api/stock/${symbol}`)
       if (response.ok) {
         const data = await response.json()
-        
-        setInvestments(prev => 
+
+        setInvestments(prev =>
           prev.map(inv => {
             if (inv.id === investmentId) {
               // Proteger contra divisão por zero e valores inválidos
@@ -143,7 +149,7 @@ function StockInvestments({ userData }) {
     setNewInvestment(prev => ({ ...prev, simbolo: symbol, nome: name }))
     setSearchResults([])
     setSearchQuery('')
-    
+
     // Buscar preço atual para sugestão
     try {
       const response = await apiFetch(`/api/stock/${symbol}`)
@@ -219,7 +225,7 @@ function StockInvestments({ userData }) {
           setShowModal(false)
           setSearchQuery('')
           showToast('Investimento adicionado com sucesso!', 'success')
-          
+
           // Buscar preço atualizado
           setTimeout(() => fetchStockPrice(investment.simbolo, investment.id), 500)
         } else {
@@ -258,11 +264,15 @@ function StockInvestments({ userData }) {
     fetchStockPrice(symbol, id)
   }
 
+  if (loading) {
+    return <LoadingSpinner />
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary/80">Investimentos</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Investimentos</p>
           <h2 className="text-2xl font-bold text-gray-900">Gestão de Ações</h2>
         </div>
         <button
@@ -277,23 +287,14 @@ function StockInvestments({ userData }) {
       </div>
 
       {/* Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="rounded-xl p-4 bg-gradient-to-br from-primary to-primary-dark text-white shadow-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-xl p-4 bg-slate-900 text-white shadow-lg">
           <p className="text-xs text-white/80">Valor Atual</p>
           <p className="text-2xl font-bold">{formatCurrency(calculateTotal(investments))}</p>
         </div>
         <div className="rounded-xl p-4 bg-white border border-gray-100 shadow-sm">
           <p className="text-xs text-gray-500">Total Investido</p>
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(calculateTotalInvested(investments))}</p>
-        </div>
-        <div className={`rounded-xl p-4 border shadow-sm ${calculateProfit(investments) >= 0 ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-          <p className="text-xs text-gray-500">Lucro/Prejuízo</p>
-          <p className={`text-2xl font-bold ${calculateProfit(investments) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-            {calculateProfit(investments) >= 0 ? '+' : ''}{formatCurrency(calculateProfit(investments))}
-          </p>
-          <p className={`text-sm font-semibold ${calculateProfit(investments) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-            {calculateProfit(investments) >= 0 ? '+' : ''}{((calculateProfit(investments) / calculateTotalInvested(investments)) * 100 || 0).toFixed(2)}%
-          </p>
         </div>
         <div className="rounded-xl p-4 bg-white border border-gray-100 shadow-sm flex items-center justify-between">
           <div>
@@ -308,7 +309,10 @@ function StockInvestments({ userData }) {
       {investments.length > 0 ? (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Meus Investimentos</h3>
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <div className="w-2 h-6 bg-primary rounded-full" />
+              Meus Investimentos
+            </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -319,7 +323,6 @@ function StockInvestments({ userData }) {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Preço Compra</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Preço Atual</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Valor</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variação</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
@@ -341,7 +344,11 @@ function StockInvestments({ userData }) {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-bold text-gray-900">
-                            {isLoading ? <span className="animate-pulse">Carregando...</span> : formatCurrency(investment.precoAtual)}
+                            {isLoading ? (
+                              <LoadingSpinner className="h-4 w-4" containerClassName="flex items-center h-5" />
+                            ) : (
+                              formatCurrency(investment.precoAtual)
+                            )}
                           </span>
                           <button
                             onClick={() => handleRefreshPrice(investment.simbolo, investment.id)}
@@ -355,25 +362,6 @@ function StockInvestments({ userData }) {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(valorTotal)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          <span className={`text-sm font-bold ${investment.variacao >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {investment.variacao >= 0 ? '+' : ''}{investment.variacao.toFixed(2)}%
-                          </span>
-                          {investment.variacao >= 0 ? (
-                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                            </svg>
-                          ) : (
-                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className={`text-xs ${lucro >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {lucro >= 0 ? '+' : ''}{formatCurrency(lucro)}
-                        </div>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                         <button
                           onClick={() => handleDeleteInvestment(investment.id)}
@@ -541,16 +529,16 @@ function StockInvestments({ userData }) {
 
           {/* Resumo do investimento */}
           {newInvestment.quantidade && newInvestment.precoCompra && (
-            <div className="p-4 bg-gradient-to-r from-primary to-primary-dark rounded-xl text-white">
+            <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-white/90">Investimento Total:</span>
-                <span className="text-2xl font-black">
+                <span className="text-sm font-medium text-slate-600">Investimento Total:</span>
+                <span className="text-2xl font-black text-slate-900">
                   {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(
                     parseFloat(newInvestment.quantidade) * parseFloat(newInvestment.precoCompra)
                   )}
                 </span>
               </div>
-              <p className="text-xs text-white/80">
+              <p className="text-xs text-slate-500 font-medium">
                 {newInvestment.quantidade} ações × {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(parseFloat(newInvestment.precoCompra))}
               </p>
             </div>
@@ -572,7 +560,7 @@ function StockInvestments({ userData }) {
             <button
               onClick={handleAddInvestment}
               disabled={!newInvestment.simbolo || !newInvestment.nome || !newInvestment.quantidade || !newInvestment.precoCompra}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+              className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Adicionar Investimento
             </button>

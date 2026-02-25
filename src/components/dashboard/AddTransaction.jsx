@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { apiFetch, API_BASE_URL } from '../../config/api'
+import { apiFetch } from '../../config/api'
 import { useToast } from '../Toast'
+import { LoadingSpinner } from '../Skeleton'
 
 function AddTransaction({ userData }) {
   const { showToast } = useToast()
@@ -16,6 +17,7 @@ function AddTransaction({ userData }) {
   const [recentTransactions, setRecentTransactions] = useState([])
   const [categories, setCategories] = useState({ despesa: [], receita: [] })
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [summary, setSummary] = useState({
     despesasMes: 0,
     receitasMes: 0,
@@ -23,9 +25,17 @@ function AddTransaction({ userData }) {
   })
 
   useEffect(() => {
-    fetchCategories()
-    fetchRecentTransactions()
-    fetchSummary()
+    const init = async () => {
+      setInitialLoading(true)
+      await Promise.all([
+        fetchCategories(),
+        fetchRecentTransactions(),
+        fetchSummary()
+      ])
+      // Pequeno delay para evitar flash
+      setTimeout(() => setInitialLoading(false), 300)
+    }
+    init()
   }, [])
 
   const fetchCategories = async () => {
@@ -38,15 +48,15 @@ function AddTransaction({ userData }) {
       if (response.ok) {
         const data = await response.json()
         const cats = data.categories || []
-        
+
         // Separar categorias por tipo (baseado no nome)
         const despesaCats = ['Alimentação', 'Transporte', 'Habitação', 'Saúde', 'Lazer', 'Educação', 'Serviços', 'Outros']
         const receitaCats = ['Salário', 'Freelance', 'Investimentos', 'Vendas', 'Presentes', 'Outros']
-        
+
         // Adicionar categorias do banco que não estão nas listas padrão
         const catNames = cats.map(c => c.name)
         despesaCats.push(...catNames.filter(c => !despesaCats.includes(c) && !receitaCats.includes(c)))
-        
+
         setCategories({
           despesa: [...new Set(despesaCats)],
           receita: [...new Set(receitaCats)]
@@ -141,7 +151,7 @@ function AddTransaction({ userData }) {
 
       if (response.ok) {
         const data = await response.json()
-        
+
         // Adicionar à lista de transações recentes
         const newTransaction = {
           id: data.transaction.id,
@@ -152,7 +162,7 @@ function AddTransaction({ userData }) {
           data: formData.data
         }
         setRecentTransactions([newTransaction, ...recentTransactions.slice(0, 4)])
-        
+
         // Reset form
         setFormData({
           descricao: '',
@@ -161,10 +171,10 @@ function AddTransaction({ userData }) {
           data: new Date().toISOString().split('T')[0],
           notas: '',
         })
-        
+
         // Atualizar resumo
         await fetchSummary()
-        
+
         showToast('Transação adicionada com sucesso!', 'success')
       } else {
         const error = await response.json()
@@ -178,10 +188,14 @@ function AddTransaction({ userData }) {
     }
   }
 
+  if (initialLoading) {
+    return <LoadingSpinner />
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary/80">Transações</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Transações</p>
         <h2 className="text-2xl font-bold text-gray-900">Adicionar Transação</h2>
       </div>
 
@@ -198,11 +212,10 @@ function AddTransaction({ userData }) {
                     setTransactionType('despesa')
                     setFormData({ ...formData, categoria: '' })
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                    transactionType === 'despesa'
-                      ? 'bg-red-500 text-white shadow-md'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${transactionType === 'despesa'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,11 +230,10 @@ function AddTransaction({ userData }) {
                     setTransactionType('receita')
                     setFormData({ ...formData, categoria: '' })
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                    transactionType === 'receita'
-                      ? 'bg-green-500 text-white shadow-md'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${transactionType === 'receita'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,15 +316,19 @@ function AddTransaction({ userData }) {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full px-4 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
-                  loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : transactionType === 'despesa'
-                    ? 'bg-red-500 hover:bg-red-600'
-                    : 'bg-green-500 hover:bg-green-600'
-                }`}
+                className={`w-full px-4 py-3 rounded-xl font-bold text-white transition-all duration-200 shadow-lg ${loading
+                  ? 'bg-slate-300 cursor-not-allowed text-slate-500 shadow-none'
+                  : transactionType === 'despesa'
+                    ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
+                    : 'bg-green-500 hover:bg-green-600 shadow-green-200'
+                  }`}
               >
-                {loading ? 'A adicionar...' : `Adicionar ${transactionType === 'despesa' ? 'Despesa' : 'Receita'}`}
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <LoadingSpinner className="h-4 w-4" containerClassName="flex items-center h-4" />
+                    <span>A adicionar...</span>
+                  </div>
+                ) : `Adicionar ${transactionType === 'despesa' ? 'Despesa' : 'Receita'}`}
               </button>
             </form>
           </div>
@@ -321,7 +337,7 @@ function AddTransaction({ userData }) {
         {/* Resumo e Transações Recentes */}
         <div className="space-y-6">
           {/* Resumo Rápido */}
-          <div className="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white shadow-lg">
+          <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-lg">
             <h3 className="text-sm font-medium text-gray-200 mb-4">Resumo Rápido</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">

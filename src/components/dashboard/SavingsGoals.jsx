@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { apiFetch, API_BASE_URL } from '../../config/api'
 import { useToast } from '../Toast'
 import Modal from '../Modal'
+import { LoadingSpinner } from '../Skeleton'
 
 function SavingsGoals({ userData }) {
   const { showToast } = useToast()
@@ -29,16 +30,16 @@ function SavingsGoals({ userData }) {
       setLoading(false)
       return
     }
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       const response = await apiFetch('/api/savings-goals', {
         method: 'GET',
         credentials: 'include',
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         setGoals(data.goals || [])
@@ -52,7 +53,8 @@ function SavingsGoals({ userData }) {
       setError('Erro de rede ou servidor.')
       showToast('Erro ao carregar objetivos de poupança', 'error')
     } finally {
-      setLoading(false)
+      // Pequeno delay para evitar flash
+      setTimeout(() => setLoading(false), 300)
     }
   }
 
@@ -184,11 +186,7 @@ function SavingsGoals({ userData }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (error && goals.length === 0) {
@@ -209,7 +207,7 @@ function SavingsGoals({ userData }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary/80">Poupança</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Poupança</p>
           <h2 className="text-2xl font-bold text-gray-900">Objetivos de Poupança</h2>
         </div>
         <button
@@ -234,7 +232,7 @@ function SavingsGoals({ userData }) {
         </div>
         <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
           <p className="text-xs text-gray-500">Progresso Médio</p>
-          <p className="text-2xl font-bold text-primary">{progressoMedio.toFixed(0)}%</p>
+          <p className="text-2xl font-bold text-slate-900">{progressoMedio.toFixed(0)}%</p>
         </div>
         <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex items-center justify-between">
           <div>
@@ -250,7 +248,10 @@ function SavingsGoals({ userData }) {
           <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Nenhum objetivo de poupança</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+            <div className="w-2 h-6 bg-primary rounded-full" />
+            Nenhum objetivo de poupança
+          </h3>
           <p className="text-gray-500 mb-6">Comece criando seu primeiro objetivo de poupança!</p>
           <button
             onClick={() => setShowModal(true)}
@@ -261,82 +262,82 @@ function SavingsGoals({ userData }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {goals.map((goal) => {
-          const progress = getProgress(goal.valorAtual, goal.valorObjetivo)
-          const daysUntil = getDaysUntil(goal.prazo)
-          const remaining = goal.valorObjetivo - goal.valorAtual
-          const monthlyNeeded = daysUntil > 0 ? remaining / Math.max(daysUntil / 30, 1) : remaining
+          {goals.map((goal) => {
+            const progress = getProgress(goal.valorAtual, goal.valorObjetivo)
+            const daysUntil = getDaysUntil(goal.prazo)
+            const remaining = goal.valorObjetivo - goal.valorAtual
+            const monthlyNeeded = daysUntil > 0 ? remaining / Math.max(daysUntil / 30, 1) : remaining
 
-          return (
-            <div key={goal.id} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.08em] text-gray-500">Objetivo</p>
-                  <h3 className="text-lg font-bold text-gray-900">{goal.nome}</h3>
+            return (
+              <div key={goal.id} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.08em] text-gray-500">Objetivo</p>
+                    <h3 className="text-lg font-bold text-gray-900">{goal.nome}</h3>
+                  </div>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{goal.categoria}</span>
                 </div>
-                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{goal.categoria}</span>
-              </div>
 
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Progresso</span>
-                  <span className="text-sm font-bold text-gray-900">{progress.toFixed(0)}%</span>
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Progresso</span>
+                    <span className="text-sm font-bold text-gray-900">{progress.toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-3">
+                    <div
+                      className="bg-slate-900 rounded-full h-3 transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-primary to-primary-dark rounded-full h-3 transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Atual</span>
-                  <span className="text-lg font-bold text-gray-900">{formatCurrency(goal.valorAtual)}</span>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Atual</span>
+                    <span className="text-lg font-bold text-gray-900">{formatCurrency(goal.valorAtual)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Objetivo</span>
+                    <span className="text-lg font-bold text-primary">{formatCurrency(goal.valorObjetivo)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Falta</span>
+                    <span className="text-sm font-semibold text-orange-600">{formatCurrency(remaining)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Objetivo</span>
-                  <span className="text-lg font-bold text-primary">{formatCurrency(goal.valorObjetivo)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Falta</span>
-                  <span className="text-sm font-semibold text-orange-600">{formatCurrency(remaining)}</span>
-                </div>
-              </div>
 
-              <div className="pt-4 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-gray-500">Prazo</span>
-                  <span className="text-xs font-medium text-gray-700">{formatDate(goal.prazo)}</span>
-                </div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-gray-500">Poupança mensal necessária</span>
-                  <span className="text-xs font-bold text-primary">{formatCurrency(monthlyNeeded)}</span>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {
-                      setSelectedGoal(goal)
-                      setShowAddValueModal(true)
-                    }}
-                    className="flex-1 px-3 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Adicionar Valor
-                  </button>
-                  <button
-                    onClick={() => handleDeleteGoal(goal.id)}
-                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-500">Prazo</span>
+                    <span className="text-xs font-medium text-gray-700">{formatDate(goal.prazo)}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-gray-500">Poupança mensal necessária</span>
+                    <span className="text-xs font-bold text-primary">{formatCurrency(monthlyNeeded)}</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setSelectedGoal(goal)
+                        setShowAddValueModal(true)
+                      }}
+                      className="flex-1 px-3 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-semibold rounded-lg transition-colors"
+                    >
+                      Adicionar Valor
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGoal(goal.id)}
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
         </div>
       )}
 

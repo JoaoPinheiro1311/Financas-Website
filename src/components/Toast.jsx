@@ -13,15 +13,15 @@ export function ToastProvider({ children }) {
       type, // 'success', 'error', 'warning', 'info'
       duration
     }
-    
+
     setToasts((prev) => [...prev, toast])
-    
+
     if (duration > 0) {
       setTimeout(() => {
         removeToast(id)
       }, duration)
     }
-    
+
     return id
   }
 
@@ -45,139 +45,113 @@ export const useToast = () => {
   return context
 }
 
+import { motion, AnimatePresence } from 'framer-motion'
+import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+
 function ToastContainer({ toasts, removeToast }) {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-sm w-full px-4 sm:px-0">
-      {toasts.map((toast) => (
-        <Toast key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
-      ))}
+    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3 max-w-sm w-full px-4 sm:px-0 pointer-events-none">
+      <AnimatePresence mode="popLayout">
+        {toasts.map((toast) => (
+          <Toast key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+        ))}
+      </AnimatePresence>
     </div>
   )
 }
 
 function Toast({ toast, onClose }) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [isLeaving, setIsLeaving] = useState(false)
   const [progress, setProgress] = useState(100)
 
   useEffect(() => {
-    // Animação de entrada
-    setTimeout(() => setIsVisible(true), 10)
-    
-    // Barra de progresso
     if (toast.duration > 0) {
+      const startTime = Date.now()
       const interval = setInterval(() => {
-        setProgress((prev) => {
-          const newProgress = prev - (100 / (toast.duration / 100))
-          return newProgress > 0 ? newProgress : 0
-        })
-      }, 100)
-      
+        const elapsedTime = Date.now() - startTime
+        const newProgress = Math.max(0, 100 - (elapsedTime / toast.duration) * 100)
+        setProgress(newProgress)
+        if (newProgress === 0) clearInterval(interval)
+      }, 10)
+
       return () => clearInterval(interval)
     }
   }, [toast.duration])
 
-  const handleClose = () => {
-    setIsLeaving(true)
-    setTimeout(() => {
-      onClose()
-    }, 300)
-  }
-
-  const getToastStyles = () => {
-    const baseStyles = 'flex items-start space-x-3 p-4 rounded-lg shadow-lg border backdrop-blur-sm transition-all duration-300'
-    
+  const getToastConfig = () => {
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} bg-green-50 border-green-200 text-green-800`
+        return {
+          bg: 'bg-white border-green-100 shadow-green-100/50',
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
+          progress: 'bg-green-500',
+          accent: 'bg-green-500'
+        }
       case 'error':
-        return `${baseStyles} bg-red-50 border-red-200 text-red-800`
+        return {
+          bg: 'bg-white border-red-100 shadow-red-100/50',
+          icon: <XCircle className="w-5 h-5 text-red-500" />,
+          progress: 'bg-red-500',
+          accent: 'bg-red-500'
+        }
       case 'warning':
-        return `${baseStyles} bg-yellow-50 border-yellow-200 text-yellow-800`
+        return {
+          bg: 'bg-white border-yellow-100 shadow-yellow-100/50',
+          icon: <AlertTriangle className="w-5 h-5 text-yellow-500" />,
+          progress: 'bg-yellow-500',
+          accent: 'bg-yellow-500'
+        }
       case 'info':
       default:
-        return `${baseStyles} bg-blue-50 border-blue-200 text-blue-800`
+        return {
+          bg: 'bg-white border-blue-100 shadow-blue-100/50',
+          icon: <Info className="w-5 h-5 text-blue-500" />,
+          progress: 'bg-blue-500',
+          accent: 'bg-blue-500'
+        }
     }
   }
 
-  const getIcon = () => {
-    switch (toast.type) {
-      case 'success':
-        return (
-          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )
-      case 'error':
-        return (
-          <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )
-      case 'warning':
-        return (
-          <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        )
-      case 'info':
-      default:
-        return (
-          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )
-    }
-  }
-
-  const getProgressColor = () => {
-    switch (toast.type) {
-      case 'success':
-        return 'bg-green-500'
-      case 'error':
-        return 'bg-red-500'
-      case 'warning':
-        return 'bg-yellow-500'
-      case 'info':
-      default:
-        return 'bg-blue-500'
-    }
-  }
+  const config = getToastConfig()
 
   return (
-    <div
-      className={`${getToastStyles()} ${
-        isVisible && !isLeaving
-          ? 'translate-x-0 opacity-100'
-          : 'translate-x-full opacity-0'
-      } relative overflow-hidden`}
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 50, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className={`pointer-events-auto relative overflow-hidden group flex items-start space-x-3 p-4 rounded-2xl shadow-2xl border ${config.bg} backdrop-blur-xl transition-all duration-300`}
     >
-      {/* Barra de progresso */}
+      {/* Accent Line */}
+      <div className={`absolute top-0 left-0 w-1 h-full ${config.accent}`} />
+
+      {/* Progress Bar */}
       {toast.duration > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
-          <div
-            className={`h-full ${getProgressColor()} transition-all duration-100 ease-linear`}
-            style={{ width: `${progress}%` }}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">
+          <motion.div
+            className={`h-full ${config.progress}`}
+            initial={{ width: "100%" }}
+            animate={{ width: `${progress}%` }}
+            transition={{ ease: "linear", duration: 0.1 }}
           />
         </div>
       )}
-      
-      <div className="flex-shrink-0">
-        {getIcon()}
+
+      <div className="flex-shrink-0 mt-0.5">
+        {config.icon}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">{toast.message}</p>
+
+      <div className="flex-1 min-w-0 pr-4">
+        <p className="text-sm font-bold text-gray-900 leading-tight">{toast.message}</p>
       </div>
+
       <button
-        onClick={handleClose}
-        className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 rounded"
-        aria-label="Fechar notificação"
+        onClick={onClose}
+        className="flex-shrink-0 text-gray-400 hover:text-gray-900 hover:bg-gray-100 p-1 rounded-lg transition-all duration-200"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <X className="w-4 h-4" />
       </button>
-    </div>
+    </motion.div>
   )
 }
 

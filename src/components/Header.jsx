@@ -38,9 +38,8 @@ function Header() {
           {/* Logo */}
           <a
             href="/"
-            className={`flex items-center space-x-2 hover:opacity-80 transition-opacity ${
-              isDashboardPage ? 'mx-auto' : ''
-            }`}
+            className={`flex items-center space-x-2 hover:opacity-80 transition-opacity ${isDashboardPage ? 'mx-auto' : ''
+              }`}
           >
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <svg
