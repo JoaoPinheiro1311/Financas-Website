@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { apiFetch } from '../../config/api'
+import { apiFetch, SERVICES } from '../../config/api'
 import { useToast } from '../Toast'
 import Modal from '../Modal'
 import { LoadingSpinner } from '../Skeleton'
@@ -242,7 +242,7 @@ function StockInvestments({ userData }) {
 
   const handleDeleteInvestment = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/investments/stocks/${id}`, {
+      const response = await fetch(`${SERVICES.INVESTMENTS}/investments/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       })

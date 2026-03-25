@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { apiFetch, API_BASE_URL } from '../../config/api'
+import { apiFetch, SERVICES } from '../../config/api'
 import { useToast } from '../Toast'
 import Modal from '../Modal'
 import { LoadingSpinner } from '../Skeleton'
@@ -133,7 +133,7 @@ function SavingsGoals({ userData }) {
 
     try {
       const newCurrentAmount = selectedGoal.valorAtual + parseFloat(addValueAmount)
-      const response = await fetch(`http://localhost:5000/api/savings-goals/${selectedGoal.id}`, {
+      const response = await fetch(`${SERVICES.GOALS}/goals/${selectedGoal.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ function SavingsGoals({ userData }) {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/savings-goals/${goalId}`, {
+      const response = await fetch(`${SERVICES.GOALS}/goals/${goalId}`, {
         method: 'DELETE',
         credentials: 'include',
       })

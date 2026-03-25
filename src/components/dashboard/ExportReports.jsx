@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+import { useState } from 'react'
+import { SERVICES } from '../../config/api'
+const API_BASE = SERVICES.FINANCE
 
 const PERIODS = [
     {
@@ -55,7 +55,7 @@ export default function ExportReports() {
         if (!start || !end) return
         setExporting(type)
         try {
-            const url = `${API_BASE}/api/export/${type}?start_date=${start}&end_date=${end}`
+            const url = `${API_BASE}/export/${type}?start_date=${start}&end_date=${end}`
             const resp = await fetch(url, { credentials: 'include' })
             if (!resp.ok) throw new Error(await resp.text())
 

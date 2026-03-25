@@ -11,9 +11,13 @@ import AddTransaction from './dashboard/AddTransaction'
 import Profile from './dashboard/Profile'
 import Subscriptions from './dashboard/Subscriptions'
 import ExportReports from './dashboard/ExportReports'
+import ServiceHealth from './dashboard/ServiceHealth'
+import SmartInsights from './dashboard/SmartInsights'
 import FinanceAIChatbot from './FinanceAIChatbot'
+import { useTickerData } from '../hooks/useTickerData'
 
 function DashboardPage() {
+  const tickerData = useTickerData()
   const [loading, setLoading] = useState(true)
   const [userData, setUserData] = useState(null)
   const [activeTab, setActiveTab] = useState('activity')
@@ -97,8 +101,18 @@ function DashboardPage() {
       )
     },
     {
+      id: 'insights', name: 'Smart Insights', icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+      )
+    },
+    {
       id: 'profile', name: 'Definições', icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+      )
+    },
+    {
+      id: 'system', name: 'Sistema', icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
       )
     },
   ]
@@ -141,23 +155,26 @@ function DashboardPage() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
-          {tabs.map((tab) => {
+          {tabs.map((tab, i) => {
             const isActive = activeTab === tab.id
             return (
-              <button
+              <motion.button
                 key={tab.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
                 onClick={() => {
                   setActiveTab(tab.id)
                   setSidebarOpen(false)
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
-                  ? 'bg-primary text-white shadow-lg'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
                   : 'text-slate-300 hover:bg-white/10 hover:text-white'
                   }`}
               >
                 {tab.icon}
                 <span>{tab.name}</span>
-              </button>
+              </motion.button>
             )
           })}
         </nav>
@@ -165,7 +182,7 @@ function DashboardPage() {
         {/* User info */}
         <div className="px-6 py-6 border-t border-white/5 mx-2">
           <div className="overflow-hidden">
-            <p className="text-sm font-bold text-slate-100 truncate">{userData?.display_name || 'Utilizador'}</p>
+            <p className="text-sm font-bold text-slate-100 truncate">{userData?.nome || 'Utilizador'}</p>
             <p className="text-[10px] text-slate-500 truncate font-medium">{userData?.email || ''}</p>
           </div>
         </div>
@@ -185,9 +202,27 @@ function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen lg:ml-0">
+      <main className="flex-1 min-h-screen lg:ml-0 overflow-y-auto">
+        {/* Real-Time Ticker */}
+        <div className="bg-slate-900 overflow-hidden py-1.5 border-b border-white/5 sticky top-0 z-40">
+          <div className="flex animate-marquee whitespace-nowrap">
+            {[...tickerData, ...tickerData, ...tickerData, ...tickerData].map((item, i) => (
+              <div key={i} className="flex items-center gap-4 px-8 border-r border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">{item.symbol}</span>
+                </div>
+                <span className="text-xs font-bold text-white tracking-tighter">€{item.price}</span>
+                <span className={`text-[10px] font-bold ${item.change.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {item.change}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 px-6 py-4">
+        <header className="sticky top-[33px] z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 px-6 py-4">
           <div className="flex items-center justify-between mx-auto">
             <div className="flex items-center gap-4">
               {/* Mobile hamburger */}
@@ -203,10 +238,36 @@ function DashboardPage() {
                 <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                   {activeTabData?.name || 'Dashboard'}
                 </h1>
-                <p className="text-sm text-slate-400 mt-0.5">
-                  Olá, <span className="font-semibold text-slate-600">{userData?.display_name || 'Utilizador'}</span>
-                </p>
+                <div className="flex items-center gap-4 mt-0.5">
+                   <p className="text-sm text-slate-400">
+                    Olá, <span className="font-semibold text-slate-600">{userData?.display_name || 'Utilizador'}</span>
+                  </p>
+                  <div className="h-4 w-px bg-slate-200" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nív. {userData?.settings?.level || 1}</span>
+                    <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(userData?.settings?.xp % 100) || 25}%` }}
+                        className="h-full bg-primary shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Wisdom */}
+            <div className="flex items-center gap-4">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="hidden lg:flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl"
+              >
+                <span className="text-xl">🧘‍♂️</span>
+                <p className="text-xs text-amber-800 font-medium italic w-48 leading-tight">
+                  "A disciplina é a ponte entre os teus objetivos e a tua riqueza."
+                </p>
+              </motion.div>
             </div>
           </div>
         </header>
@@ -228,7 +289,9 @@ function DashboardPage() {
               {activeTab === 'subscriptions' && <Subscriptions userData={userData} />}
               {activeTab === 'export' && <ExportReports />}
               {activeTab === 'add' && <AddTransaction userData={userData} />}
+              {activeTab === 'insights' && <SmartInsights userData={userData} />}
               {activeTab === 'profile' && <Profile userData={userData} />}
+              {activeTab === 'system' && <ServiceHealth />}
             </motion.div>
           </AnimatePresence>
         </div>

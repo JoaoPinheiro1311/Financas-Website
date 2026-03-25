@@ -17,6 +17,8 @@ function FinancialActivity({ userData }) {
     evoluçãoSaldo: []
   })
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState('all') // all, income, expense
 
   useEffect(() => {
     fetchActivitySummary()
@@ -148,8 +150,8 @@ function FinancialActivity({ userData }) {
           <div className="w-2 h-6 bg-primary rounded-full" />
           <span>Evolução do Saldo</span>
         </h3>
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={data.evoluçãoSaldo}>
               <defs>
                 <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
@@ -177,9 +179,9 @@ function FinancialActivity({ userData }) {
             <div className="w-2 h-6 bg-primary rounded-full" />
             <span>Despesas por Categoria</span>
           </h3>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
             {data.despesasPorCategoria.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={data.despesasPorCategoria}
@@ -217,31 +219,63 @@ function FinancialActivity({ userData }) {
             <div className="w-2 h-6 bg-primary rounded-full" />
             <span>Transações Recentes</span>
           </h3>
+          
+          {/* Filter Bar */}
+          <div className="mb-4 flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <input 
+                type="text" 
+                placeholder="Pesquisar..." 
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <select 
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="all">Todas</option>
+              <option value="income">Receitas</option>
+              <option value="expense">Despesas</option>
+            </select>
+          </div>
+
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            {data.ultimasTransacoes.map((transacao) => (
-              <div key={transacao.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${transacao.tipo === 'receita' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                    {transacao.tipo === 'receita' ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                      </svg>
-                    )}
+            {data.ultimasTransacoes
+              .filter(t => {
+                const matchesSearch = t.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+                const matchesType = filterType === 'all' || t.tipo === filterType
+                return matchesSearch && matchesType
+              })
+              .map((transacao) => (
+                <div key={transacao.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${transacao.tipo === 'receita' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                      {transacao.tipo === 'receita' ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-gray-900">{transacao.descricao}</p>
+                      <p className="text-xs text-gray-500">{formatDate(transacao.data)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm text-gray-900">{transacao.descricao}</p>
-                    <p className="text-xs text-gray-500">{formatDate(transacao.data)}</p>
-                  </div>
+                  <p className={`font-bold ${transacao.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
+                    {transacao.tipo === 'receita' ? '+' : '-'}{formatCurrency(Math.abs(transacao.valor))}
+                  </p>
                 </div>
-                <p className={`font-bold ${transacao.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
-                  {transacao.tipo === 'receita' ? '+' : '-'}{formatCurrency(Math.abs(transacao.valor))}
-                </p>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>

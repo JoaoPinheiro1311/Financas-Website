@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { API_BASE_URL } from '../config/api'
+import { SERVICES } from '../config/api'
 
 function CallbackHandler() {
   const navigate = useNavigate()
@@ -14,7 +14,7 @@ function CallbackHandler() {
       // Se recebermos o código no frontend, reencaminhamos para o backend
       // Google -> Frontend (5174) -> Backend (5000)
       const query = searchParams.toString()
-      window.location.href = `${API_BASE_URL}/callback/google?${query}`
+      window.location.href = `${SERVICES.IDENTITY}/callback/google?${query}`
       return
     }
 

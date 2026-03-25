@@ -38,7 +38,7 @@ echo.
 echo ✅ Setup concluído!
 echo.
 echo Para iniciar o projeto:
-echo   Terminal 1: npm run dev         (Frontend - http://localhost:5174)
-echo   Terminal 2: python app.py       (Backend - http://localhost:5000)
+echo   Terminal 1: npm run dev                 (Frontend - http://localhost:5174)
+echo   Terminal 2: start_backend_manual.bat    (Backend Microserviços)
 echo.
 pause

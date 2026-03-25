@@ -19,10 +19,26 @@ function FinancialHealth({ userData }) {
   const [taxaEndividamento, setTaxaEndividamento] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
   useEffect(() => {
     fetchFinancialHealth()
+    fetchAIAnalysis()
   }, [userData])
+
+  const fetchAIAnalysis = async () => {
+    if (!userData?.user_id) return;
+    setAiLoading(true);
+    try {
+      const resp = await apiFetch('/api/summary/analysis');
+      if (resp.ok) {
+        const data = await resp.json();
+        setAiAnalysis(data.analysis);
+      }
+    } catch (e) { console.error('AI Analysis Error:', e); }
+    finally { setAiLoading(false); }
+  }
 
   const fetchFinancialHealth = async () => {
     if (!userData?.user_id) {
@@ -345,6 +361,23 @@ function FinancialHealth({ userData }) {
             <div className="w-1.5 h-6 bg-primary rounded-full"></div>
             <span>Recomendações Práticas</span>
           </h3>
+          
+          {/* AI Intelligent Analysis Card */}
+          <div className="mb-6 p-5 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <svg className="w-12 h-12 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z" />
+              </svg>
+            </div>
+            <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-2 flex items-center">
+              <span className="mr-2">✨ Análise de IA</span>
+              {aiLoading && <div className="w-2 h-2 bg-primary rounded-full animate-ping"></div>}
+            </h4>
+            <p className="text-sm text-slate-700 leading-relaxed italic">
+              {aiLoading ? 'A gerar análise personalizada...' : aiAnalysis || 'A carregar insights do teu coach financeiro...'}
+            </p>
+          </div>
+
           <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
             {parseFloat(taxaPoupanca) >= 20 && parseFloat(mesesFundoEmergencia) >= 6 && parseFloat(taxaEndividamento) <= 20 ? (
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
