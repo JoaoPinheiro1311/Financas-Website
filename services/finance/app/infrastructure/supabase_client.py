@@ -15,5 +15,9 @@ supabase: Client = None
 if SUPABASE_URL and SUPABASE_SERVICE_KEY:
     try:
         supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        print("Supabase client initialized successfully")
     except Exception as e:
-        print(f"Error initializing Supabase: {e}")
+        print(f"CRITICAL: Error initializing Supabase: {str(e)}")
+else:
+    print("CRITICAL: SUPABASE_URL or SUPABASE_SERVICE_KEY missing from environment")
+

@@ -3,7 +3,8 @@ from app.utils.auth import get_current_user
 from fastapi import APIRouter, HTTPException, Depends
 from app.infrastructure.supabase_client import supabase
 import os
-import google.genai as genai
+from google import genai
+
 
 router = APIRouter()
 

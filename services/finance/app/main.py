@@ -26,6 +26,17 @@ app.add_middleware(
 def read_root():
     return {"message": "Finance Service API", "status": "running"}
 
+from fastapi.responses import JSONResponse
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"error": str(exc), "traceback": traceback.format_exc()}
+    )
+
+
 @app.get("/api/health")
 @app.get("/api/v1/api/health")
 def health_check():
