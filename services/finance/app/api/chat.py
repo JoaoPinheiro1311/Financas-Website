@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
 import os
-import google.genai as genai
+from google import genai
+
 from app.infrastructure.supabase_client import supabase
 from datetime import datetime, timedelta
 
