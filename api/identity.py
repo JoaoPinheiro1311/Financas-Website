@@ -2,12 +2,13 @@ import sys
 import os
 from pathlib import Path
 
-# Add the service directory to sys.path so 'from app...' works correctly
+# Limpar módulos 'app' em cache para evitar poluição entre serviços no Vercel
+for mod in list(sys.modules.keys()):
+    if mod == 'app' or mod.startswith('app.'):
+        del sys.modules[mod]
+
 service_root = Path(__file__).parent.parent / "services" / "identity"
 sys.path.insert(0, str(service_root))
 
-from app.main import app
-
-# Vercel needs the app object to be exported
-# FastAPI is ASGI, which Vercel supports
-app = app
+from app.main import app as identity_app
+app = identity_app

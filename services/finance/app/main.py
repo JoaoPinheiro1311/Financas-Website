@@ -27,8 +27,10 @@ def read_root():
     return {"message": "Finance Service API", "status": "running"}
 
 @app.get("/api/health")
+@app.get("/api/v1/api/health")
 def health_check():
     return {"status": "ok"}
+
 
 from app.api.transactions import router as transactions_router
 from app.api.categories import router as categories_router

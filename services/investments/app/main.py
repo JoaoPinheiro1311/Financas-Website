@@ -27,8 +27,10 @@ def read_root():
     return {"message": "Investment Service API", "status": "running"}
 
 @app.get("/api/health")
+@app.get("/api/v1/investments/api/health")
 def health_check():
     return {"status": "ok"}
+
 
 from app.api.investments import router as investments_router
 # Para compatibilidade com Vercel e local

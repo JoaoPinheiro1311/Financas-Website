@@ -35,8 +35,10 @@ def read_root():
     return {"message": "Notification Service API", "status": "running"}
 
 @app.get("/api/health")
+@app.get("/api/v1/notifications/api/health")
 def health_check():
     return {"status": "ok"}
+
 
 from app.api.notifications import router as notifications_router
 app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["Notifications"])

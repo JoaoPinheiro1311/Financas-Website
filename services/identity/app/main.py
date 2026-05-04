@@ -28,8 +28,10 @@ def read_root():
     return {"message": "Identity Service API", "status": "running"}
 
 @app.get("/api/health")
+@app.get("/api/v1/auth/api/health")
 def health_check():
     return {"status": "ok"}
+
 
 # Import and include routers here later
 from app.api.auth import router as auth_router

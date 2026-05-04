@@ -27,8 +27,10 @@ def read_root():
     return {"message": "Goals Service API", "status": "running"}
 
 @app.get("/api/health")
+@app.get("/api/v1/goals/api/health")
 def health_check():
     return {"status": "ok"}
+
 
 from app.api.goals import router as goals_router
 # Para compatibilidade com Vercel e local
