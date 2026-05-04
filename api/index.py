@@ -1,20 +1,11 @@
-"""
-Vercel Serverless Function Entry Point
-This is the main handler for all API requests on Vercel
-"""
-
 import sys
-import os
 from pathlib import Path
 
-# Add parent directory to path to import app
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Fallback para o Identity Service se for chamado diretamente via /api
+service_root = Path(__file__).parent.parent / "services" / "identity"
+sys.path.insert(0, str(service_root))
 
-# Set environment for serverless
-os.environ['VERCEL'] = '1'
+from app.main import app
 
-# Import Flask app - this is the WSGI application
-from app import app
-
-# Export as WSGI application for Vercel
-__all__ = ['app']
+# Exportar como app para o Vercel
+app = app
