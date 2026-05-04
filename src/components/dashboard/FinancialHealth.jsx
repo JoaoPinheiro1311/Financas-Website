@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { apiFetch } from '../../config/api'
 import { useToast } from '../Toast'
 import { LoadingSpinner } from '../Skeleton'
+import { motion } from 'framer-motion'
 
 function FinancialHealth({ userData }) {
   const { showToast } = useToast()
@@ -142,54 +143,65 @@ function FinancialHealth({ userData }) {
       <div className="relative bg-slate-900 rounded-2xl p-8 text-white shadow-xl overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-transparent opacity-50"></div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="flex-1">
-            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2 flex items-center space-x-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span>Score de Saúde Financeira</span>
+            <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center space-x-3">
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
+              <span>Health Intelligence v2.0</span>
             </h3>
-            <div className="flex items-baseline space-x-2 mb-3">
-              <p className="text-7xl font-bold tracking-tight">{healthScore}</p>
-              <p className="text-2xl text-slate-500 font-medium">/100</p>
+            <div className="flex items-baseline space-x-2 mb-4">
+              <p className="text-8xl font-black tracking-tighter text-white drop-shadow-2xl">{healthScore}</p>
+              <p className="text-2xl text-slate-600 font-black">/100</p>
             </div>
-            <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg border font-bold text-sm ${getScoreLabel(healthScore) === 'Excelente' ? 'border-green-500/30 bg-green-500/10 text-green-400' :
-              getScoreLabel(healthScore) === 'Bom' ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400' :
-                'border-red-500/30 bg-red-500/10 text-red-400'
-              }`}>
-              <span>{getScoreLabel(healthScore)}</span>
+            <div className="flex flex-wrap gap-3">
+              <div className={`px-4 py-2 rounded-xl border-2 font-black text-xs uppercase tracking-widest transition-all duration-500 ${healthScore >= 80 ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' :
+                healthScore >= 60 ? 'border-amber-500/50 bg-amber-500/10 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' :
+                  'border-rose-500/50 bg-rose-500/10 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.2)]'
+                }`}>
+                {getScoreLabel(healthScore)}
+              </div>
+              <div className="px-4 py-2 rounded-xl border-2 border-white/10 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest">
+                Análise Preditiva Ativa
+              </div>
             </div>
           </div>
 
-          {/* Circular progress - Cleaner implementation */}
-          <div className="relative w-36 h-36">
-            <svg className="transform -rotate-90 w-36 h-36">
+          {/* Circular progress - Ultra Premium Implementation */}
+          <div className="relative w-48 h-48 group">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-700"></div>
+            <svg className="transform -rotate-90 w-48 h-48 relative z-10">
+              <defs>
+                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#2dd4bf" />
+                </linearGradient>
+              </defs>
               <circle
-                cx="72"
-                cy="72"
-                r="64"
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth="8"
+                cx="96"
+                cy="96"
+                r="88"
+                stroke="rgba(255,255,255,0.03)"
+                strokeWidth="12"
                 fill="none"
               />
-              <circle
-                cx="72"
-                cy="72"
-                r="64"
-                stroke="currentColor"
-                strokeWidth="8"
+              <motion.circle
+                cx="96"
+                cy="96"
+                r="88"
+                stroke="url(#gaugeGradient)"
+                strokeWidth="12"
                 fill="none"
-                strokeDasharray={`${2 * Math.PI * 64}`}
-                strokeDashoffset={`${2 * Math.PI * 64 * (1 - healthScore / 100)}`}
+                initial={{ strokeDashoffset: 2 * Math.PI * 88 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 88 * (1 - healthScore / 100) }}
+                strokeDasharray={`${2 * Math.PI * 88}`}
                 strokeLinecap="round"
-                className={`transition-all duration-1000 ease-out ${healthScore >= 80 ? 'text-green-500' :
-                  healthScore >= 60 ? 'text-yellow-500' : 'text-red-500'
-                  }`}
+                transition={{ duration: 2, ease: "easeOut" }}
+                className="drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
               />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl font-bold">{healthScore}</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+              <span className="text-5xl font-black text-white tracking-tighter">{healthScore}%</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Status</span>
             </div>
           </div>
         </div>

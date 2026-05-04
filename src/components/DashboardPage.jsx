@@ -13,6 +13,9 @@ import Subscriptions from './dashboard/Subscriptions'
 import ExportReports from './dashboard/ExportReports'
 import ServiceHealth from './dashboard/ServiceHealth'
 import SmartInsights from './dashboard/SmartInsights'
+import CompoundSimulator from './dashboard/CompoundSimulator'
+import DebtVsInvestment from './dashboard/DebtVsInvestment'
+import CurrencyConverter from './dashboard/CurrencyConverter'
 import FinanceAIChatbot from './FinanceAIChatbot'
 import { useTickerData } from '../hooks/useTickerData'
 
@@ -22,7 +25,12 @@ function DashboardPage() {
   const [userData, setUserData] = useState(null)
   const [activeTab, setActiveTab] = useState('activity')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [activeSimTab, setActiveSimTab] = useState('compound')
   const navigate = useNavigate()
+
+  // Make sim tab accessible to sub-components if needed
+  window.activeSimTab = activeSimTab
+  window.setSimTab = setActiveSimTab
 
   useEffect(() => {
     checkLoginStatus()
@@ -103,6 +111,11 @@ function DashboardPage() {
     {
       id: 'insights', name: 'Smart Insights', icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+      )
+    },
+    {
+      id: 'simulator', name: 'Simulador', icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       )
     },
     {
@@ -203,21 +216,24 @@ function DashboardPage() {
 
       {/* Main Content */}
       <main className="flex-1 min-h-screen lg:ml-0 overflow-y-auto">
-        {/* Real-Time Ticker */}
-        <div className="bg-slate-900 overflow-hidden py-1.5 border-b border-white/5 sticky top-0 z-40">
+        {/* Real-Time Ticker - Bloomberg Style */}
+        <div className="bg-slate-950 overflow-hidden py-2 border-b border-white/5 sticky top-0 z-40">
           <div className="flex animate-marquee whitespace-nowrap">
-            {[...tickerData, ...tickerData, ...tickerData, ...tickerData].map((item, i) => (
-              <div key={i} className="flex items-center gap-4 px-8 border-r border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">{item.symbol}</span>
+            {[...tickerData, ...tickerData, ...tickerData, ...tickerData].map((item, i) => {
+              const isUp = item.change.startsWith('+');
+              return (
+                <div key={i} className="flex items-center gap-6 px-10 border-r border-white/5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest font-mono">{item.symbol}</span>
+                    <span className="text-xs font-bold text-white font-mono">€{item.price}</span>
+                  </div>
+                  <div className={`flex items-center gap-1 text-[10px] font-black font-mono ${isUp ? 'text-emerald-400' : 'text-rose-500'}`}>
+                    <span>{isUp ? '▲' : '▼'}</span>
+                    <span>{item.change}</span>
+                  </div>
                 </div>
-                <span className="text-xs font-bold text-white tracking-tighter">€{item.price}</span>
-                <span className={`text-[10px] font-bold ${item.change.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {item.change}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -291,6 +307,33 @@ function DashboardPage() {
               {activeTab === 'add' && <AddTransaction userData={userData} />}
               {activeTab === 'insights' && <SmartInsights userData={userData} />}
               {activeTab === 'profile' && <Profile userData={userData} />}
+              {activeTab === 'simulator' && (
+                <div className="space-y-6">
+                   <div className="flex gap-4 p-1.5 bg-slate-200/50 rounded-2xl w-fit backdrop-blur-sm border border-slate-200">
+                      <button 
+                        onClick={() => window.setSimTab('compound')} 
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${(!window.activeSimTab || window.activeSimTab === 'compound') ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        Juros Compostos
+                      </button>
+                      <button 
+                        onClick={() => window.setSimTab('debt')} 
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${window.activeSimTab === 'debt' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        Dívida vs Invest.
+                      </button>
+                      <button 
+                        onClick={() => window.setSimTab('converter')} 
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${window.activeSimTab === 'converter' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        Conversor
+                      </button>
+                   </div>
+                   {(!window.activeSimTab || window.activeSimTab === 'compound') && <CompoundSimulator />}
+                   {window.activeSimTab === 'debt' && <DebtVsInvestment />}
+                   {window.activeSimTab === 'converter' && <CurrencyConverter />}
+                </div>
+              )}
               {activeTab === 'system' && <ServiceHealth />}
             </motion.div>
           </AnimatePresence>

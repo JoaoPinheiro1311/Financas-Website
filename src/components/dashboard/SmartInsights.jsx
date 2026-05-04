@@ -129,24 +129,24 @@ function SmartInsights({ userData }) {
         </div>
 
         {/* Sensei Wisdom (2/5) */}
-        <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-10 text-white flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute -right-10 -bottom-10 opacity-10 transform scale-150 rotate-12 group-hover:scale-125 transition-transform duration-1000">
-            <svg className="w-64 h-64" fill="currentColor" viewBox="0 0 24 24">
+        <div className="lg:col-span-2 glass-dark rounded-[2.5rem] p-10 text-white flex flex-col justify-between relative overflow-hidden group border border-white/5 shadow-2xl">
+          <div className="absolute -right-10 -bottom-10 opacity-20 transform scale-150 rotate-12 group-hover:scale-125 transition-transform duration-1000">
+            <svg className="w-64 h-64 text-primary" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z" />
             </svg>
           </div>
           <div className="relative z-10">
-            <div className="w-16 h-1 bg-primary mb-8" />
-            <h3 className="text-2xl font-black mb-6 flex items-center gap-3">
-              Dica do Sensei
+            <div className="w-16 h-1.5 bg-gradient-to-r from-primary to-emerald-400 mb-8 rounded-full" />
+            <h3 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+              Mestria Financeira
             </h3>
-            <p className="text-slate-300 italic text-lg leading-relaxed font-medium">
-              "O tempo é o melhor amigo dos juros compostos. Cada euro poupado hoje é um soldado que lutará pela tua liberdade amanhã. Mantém a disciplina, pequeno gafanhoto."
+            <p className="text-white text-2xl font-bold leading-tight tracking-tight">
+              "O tempo é o melhor amigo dos juros compostos. Cada euro poupado hoje é um soldado que lutará pela tua liberdade amanhã."
             </p>
           </div>
           <div className="relative z-10 mt-10">
-            <button className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-all border border-white/10 backdrop-blur-sm">
-              Pedir Nova Análise
+            <button className="px-6 py-3 bg-primary hover:bg-primary-dark rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+              Solicitar Mentor
             </button>
           </div>
         </div>

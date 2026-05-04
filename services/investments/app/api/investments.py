@@ -2,6 +2,7 @@ from app.infrastructure.supabase_client import supabase
 from app.utils.auth import get_current_user
 from fastapi import APIRouter, HTTPException, Depends
 import random
+import requests
 
 router = APIRouter()
 
@@ -15,21 +16,43 @@ async def get_investments(current_user: dict = Depends(get_current_user)):
         response = supabase.table('investments').select('*').eq('user_id', user_id).execute()
         investments = response.data if response.data else []
         
-        # O frontend StockInvestments.jsx usa .map() e espera os nomes originais da DB:
-        # inv.avg_price, inv.last_price, inv.symbol, inv.quantity
         formatted = []
+        
+        # Obter IDs de cripto para CoinGecko (mapeamento simples)
+        crypto_map = {"BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana"}
+        symbols = [inv.get('symbol', '').upper() for inv in investments]
+        crypto_ids = [crypto_map[s] for s in symbols if s in crypto_map]
+        
+        current_prices = {}
+        if crypto_ids:
+            try:
+                url = f"https://api.coingecko.com/api/v3/simple/price?ids={','.join(crypto_ids)}&vs_currencies=eur"
+                r = requests.get(url, timeout=5)
+                if r.status_code == 200:
+                    data = r.json()
+                    for s, cid in crypto_map.items():
+                        if cid in data:
+                            current_prices[s] = data[cid]['eur']
+            except:
+                pass # Fallback para simulação se a API falhar
+
         for inv in investments:
-            # God-Tier Feature: Simular flutuação de preço real-time
+            symbol = inv.get('symbol', '').upper()
             base_price = float(inv.get('last_price', 0))
-            fluctuation = random.uniform(-0.005, 0.005) # +/- 0.5%
-            simulated_price = base_price * (1 + fluctuation)
+            
+            if symbol in current_prices:
+                real_price = current_prices[symbol]
+            else:
+                # Simular flutuação para ativos não-crypto ou se a API falhar
+                fluctuation = random.uniform(-0.005, 0.005)
+                real_price = base_price * (1 + fluctuation)
             
             formatted.append({
                 'id': inv['id'],
-                'symbol': inv.get('symbol'),
+                'symbol': symbol,
                 'quantity': float(inv.get('quantity', 0)),
                 'avg_price': float(inv.get('avg_price', 0)),
-                'last_price': round(simulated_price, 2),
+                'last_price': round(real_price, 2),
                 'market': inv.get('market'),
             })
         return {"investments": formatted}
