@@ -4,7 +4,28 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/v1/auth/api/health",
+      "destination": "/api/identity.py"
+    },
+    {
+      "source": "/api/v1/api/health",
+      "destination": "/api/finance.py"
+    },
+    {
+      "source": "/api/v1/investments/api/health",
+      "destination": "/api/investments.py"
+    },
+    {
+      "source": "/api/v1/goals/api/health",
+      "destination": "/api/goals.py"
+    },
+    {
+      "source": "/api/v1/notifications/api/health",
+      "destination": "/api/notifications.py"
+    },
+    {
       "source": "/api/v1/auth/(.*)",
+
       "destination": "/api/identity.py"
     },
     {

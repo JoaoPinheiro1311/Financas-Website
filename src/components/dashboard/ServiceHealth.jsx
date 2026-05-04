@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 
 const SERVICES = [
-  { name: 'Identity Service', port: '8001', endpoint: '/api/health' },
-  { name: 'Finance Service', port: '8002', endpoint: '/api/health' },
-  { name: 'Investment Service', port: '8003', endpoint: '/api/health' },
-  { name: 'Goals Service', port: '8004', endpoint: '/api/health' },
-  { name: 'Notification Service', port: '8005', endpoint: '/api/health' },
+  { name: 'Identity Service', port: '8001', endpoint: '/api/health', prodPath: '/api/v1/auth/api/health' },
+  { name: 'Finance Service', port: '8002', endpoint: '/api/health', prodPath: '/api/v1/api/health' },
+  { name: 'Investment Service', port: '8003', endpoint: '/api/health', prodPath: '/api/v1/investments/api/health' },
+  { name: 'Goals Service', port: '8004', endpoint: '/api/health', prodPath: '/api/v1/goals/api/health' },
+  { name: 'Notification Service', port: '8005', endpoint: '/api/health', prodPath: '/api/v1/notifications/api/health' },
 ]
 
 export default function ServiceHealth() {
@@ -13,11 +13,17 @@ export default function ServiceHealth() {
   const [loading, setLoading] = useState(true)
 
   const checkHealth = async () => {
+    const isLocal = window.location.hostname === 'localhost'
     const results = {}
+    
     for (const service of SERVICES) {
       try {
         const start = Date.now()
-        const resp = await fetch(`http://localhost:${service.port}${service.endpoint}`, {
+        const url = isLocal 
+          ? `http://localhost:${service.port}${service.endpoint}`
+          : `${window.location.origin}${service.prodPath}`
+          
+        const resp = await fetch(url, {
           mode: 'cors',
           credentials: 'omit'
         })
@@ -34,6 +40,7 @@ export default function ServiceHealth() {
     setStatus(results)
     setLoading(false)
   }
+
 
   useEffect(() => {
     checkHealth()
