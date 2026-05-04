@@ -17,18 +17,27 @@ GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:8001/api/v1/auth/callback/google')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5174')
 
 @router.get("/login/google")
-def login_google():
+def login_google(request: Request):
     """Redireciona o usuario para o Google OAuth"""
+    # Se não houver REDIRECT_URI no env, tenta construir dinamicamente
+    actual_redirect_uri = REDIRECT_URI
+    if not actual_redirect_uri:
+        if "localhost" in request.url.netloc:
+            actual_redirect_uri = "http://localhost:8001/api/v1/auth/callback/google"
+        else:
+            # No Vercel, usamos o próprio host da requisição
+            actual_redirect_uri = f"https://{request.url.netloc}/api/v1/auth/callback/google"
+            
     if not GOOGLE_CLIENT_ID:
         return RedirectResponse(f"{FRONTEND_URL}/login?error=config_error&details=GOOGLE_CLIENT_ID_missing")
     
     params = {
         'client_id': GOOGLE_CLIENT_ID,
-        'redirect_uri': REDIRECT_URI,
+        'redirect_uri': actual_redirect_uri,
         'response_type': 'code',
         'scope': 'openid email profile',
         'access_type': 'offline',
@@ -38,8 +47,9 @@ def login_google():
     auth_url = f"{GOOGLE_AUTH_URL}?{'&'.join([f'{k}={v}' for k, v in params.items()])}"
     return RedirectResponse(auth_url)
 
+
 @router.get("/callback/google")
-async def callback_google(code: str = None, error: str = None):
+async def callback_google(request: Request, code: str = None, error: str = None):
     """Processa o callback do Google OAuth"""
     if error:
         return RedirectResponse(f"{FRONTEND_URL}/login?error=google_error&details={error}")
@@ -47,17 +57,26 @@ async def callback_google(code: str = None, error: str = None):
     if not code:
         return RedirectResponse(f"{FRONTEND_URL}/login?error=no_code")
     
+    # Determinar REDIRECT_URI dinamicamente (deve coincidir com o do login_google)
+    actual_redirect_uri = REDIRECT_URI
+    if not actual_redirect_uri:
+        if "localhost" in request.url.netloc:
+            actual_redirect_uri = "http://localhost:8001/api/v1/auth/callback/google"
+        else:
+            actual_redirect_uri = f"https://{request.url.netloc}/api/v1/auth/callback/google"
+
     try:
         # Trocar codigo por token
         token_data = {
             'code': code,
             'client_id': GOOGLE_CLIENT_ID,
             'client_secret': GOOGLE_CLIENT_SECRET,
-            'redirect_uri': REDIRECT_URI,
+            'redirect_uri': actual_redirect_uri,
             'grant_type': 'authorization_code'
         }
         
         token_response = requests.post(GOOGLE_TOKEN_URL, data=token_data, timeout=10)
+
         
         if token_response.status_code != 200:
             return RedirectResponse(f"{FRONTEND_URL}/login?error=token_exchange_failed")

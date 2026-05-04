@@ -14,11 +14,21 @@ export const getApiBaseUrl = () => {
 export const API_BASE_URL = getApiBaseUrl()
 
 export const SERVICES = {
-  IDENTITY: 'http://localhost:8001/api/v1/auth',
-  FINANCE: 'http://localhost:8002/api/v1',
-  INVESTMENTS: 'http://localhost:8003/api/v1',
-  GOALS: 'http://localhost:8004/api/v1',
-  NOTIFICATIONS: 'http://localhost:8005/api/v1',
+  IDENTITY: window.location.hostname === 'localhost' 
+    ? 'http://localhost:8001/api/v1/auth' 
+    : `${window.location.origin}/api/v1/auth`,
+  FINANCE: window.location.hostname === 'localhost'
+    ? 'http://localhost:8002/api/v1'
+    : `${window.location.origin}/api/v1`,
+  INVESTMENTS: window.location.hostname === 'localhost'
+    ? 'http://localhost:8003/api/v1'
+    : `${window.location.origin}/api/v1/investments`,
+  GOALS: window.location.hostname === 'localhost'
+    ? 'http://localhost:8004/api/v1'
+    : `${window.location.origin}/api/v1/goals`,
+  NOTIFICATIONS: window.location.hostname === 'localhost'
+    ? 'http://localhost:8005/api/v1'
+    : `${window.location.origin}/api/v1/notifications`,
 };
 
 /**
