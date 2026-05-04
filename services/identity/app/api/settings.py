@@ -3,8 +3,8 @@ from app.infrastructure.supabase_client import supabase
 
 router = APIRouter()
 
-@router.get("")
 @router.get("/")
+
 async def get_user_settings(user_id: int):
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
@@ -67,10 +67,9 @@ async def get_user_settings(user_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("")
 @router.post("/")
-@router.put("")
 @router.put("/")
+
 async def update_user_settings(user_id: int, data: dict = Body(...)):
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")

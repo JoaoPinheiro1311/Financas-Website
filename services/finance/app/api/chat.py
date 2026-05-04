@@ -59,8 +59,8 @@ async def get_user_context(user_id: int):
     except:
         return "Erro ao carregar contexto financeiro."
 
-@router.post("")
 @router.post("/")
+
 async def chat(user_id: int, data: dict = Body(...)):
     user_message = data.get('message', '').strip()
     conversation_history = data.get('conversationHistory', [])
