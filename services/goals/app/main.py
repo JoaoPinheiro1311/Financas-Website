@@ -30,4 +30,7 @@ def health_check():
     return {"status": "ok"}
 
 from app.api.goals import router as goals_router
+# Para compatibilidade com Vercel e local
 app.include_router(goals_router, prefix="/api/v1/goals", tags=["Goals"])
+app.include_router(goals_router, tags=["Goals"])
+

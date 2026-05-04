@@ -30,4 +30,7 @@ def health_check():
     return {"status": "ok"}
 
 from app.api.investments import router as investments_router
+# Para compatibilidade com Vercel e local
 app.include_router(investments_router, prefix="/api/v1/investments", tags=["Investments"])
+app.include_router(investments_router, tags=["Investments"])
+

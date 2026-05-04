@@ -8,7 +8,15 @@
       "destination": "/api/identity.py"
     },
     {
+      "source": "/api/v1/auth",
+      "destination": "/api/identity.py"
+    },
+    {
       "source": "/api/v1/transactions/(.*)",
+      "destination": "/api/finance.py"
+    },
+    {
+      "source": "/api/v1/transactions",
       "destination": "/api/finance.py"
     },
     {
@@ -16,11 +24,23 @@
       "destination": "/api/finance.py"
     },
     {
+      "source": "/api/v1/categories",
+      "destination": "/api/finance.py"
+    },
+    {
       "source": "/api/v1/summary/(.*)",
       "destination": "/api/finance.py"
     },
     {
+      "source": "/api/v1/summary",
+      "destination": "/api/finance.py"
+    },
+    {
       "source": "/api/v1/subscriptions/(.*)",
+      "destination": "/api/finance.py"
+    },
+    {
+      "source": "/api/v1/subscriptions",
       "destination": "/api/finance.py"
     },
     {
@@ -32,6 +52,10 @@
       "destination": "/api/finance.py"
     },
     {
+      "source": "/api/v1/chat",
+      "destination": "/api/finance.py"
+    },
+    {
       "source": "/api/v1/budgets/(.*)",
       "destination": "/api/finance.py"
     },
@@ -40,11 +64,23 @@
       "destination": "/api/investments.py"
     },
     {
+      "source": "/api/v1/investments",
+      "destination": "/api/investments.py"
+    },
+    {
       "source": "/api/v1/goals/(.*)",
       "destination": "/api/goals.py"
     },
     {
+      "source": "/api/v1/goals",
+      "destination": "/api/goals.py"
+    },
+    {
       "source": "/api/v1/notifications/(.*)",
+      "destination": "/api/notifications.py"
+    },
+    {
+      "source": "/api/v1/notifications",
       "destination": "/api/notifications.py"
     },
     {

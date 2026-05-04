@@ -37,10 +37,25 @@ from app.api.export import router as export_router
 from app.api.chat import router as chat_router
 from app.api.budgets import router as budgets_router
 
+# Para compatibilidade com Vercel e local, incluímos as rotas com e sem prefixo
 app.include_router(transactions_router, prefix="/api/v1/transactions", tags=["Transactions"])
+app.include_router(transactions_router, tags=["Transactions"])
+
 app.include_router(categories_router, prefix="/api/v1/categories", tags=["Categories"])
+app.include_router(categories_router, tags=["Categories"])
+
 app.include_router(summary_router, prefix="/api/v1/summary", tags=["Summary"])
+app.include_router(summary_router, tags=["Summary"])
+
 app.include_router(subscriptions_router, prefix="/api/v1/subscriptions", tags=["Subscriptions"])
+app.include_router(subscriptions_router, tags=["Subscriptions"])
+
 app.include_router(export_router, prefix="/api/v1/export", tags=["Export"])
+app.include_router(export_router, tags=["Export"])
+
 app.include_router(chat_router, prefix="/api/v1/chat", tags=["AI Chat"])
+app.include_router(chat_router, tags=["AI Chat"])
+
 app.include_router(budgets_router, prefix="/api/v1/budgets", tags=["Budgets"])
+app.include_router(budgets_router, tags=["Budgets"])
+

@@ -22,13 +22,13 @@ export const SERVICES = {
     : `${window.location.origin}/api/v1`,
   INVESTMENTS: window.location.hostname === 'localhost'
     ? 'http://localhost:8003/api/v1'
-    : `${window.location.origin}/api/v1/investments`,
+    : `${window.location.origin}/api/v1`,
   GOALS: window.location.hostname === 'localhost'
     ? 'http://localhost:8004/api/v1'
-    : `${window.location.origin}/api/v1/goals`,
+    : `${window.location.origin}/api/v1`,
   NOTIFICATIONS: window.location.hostname === 'localhost'
     ? 'http://localhost:8005/api/v1'
-    : `${window.location.origin}/api/v1/notifications`,
+    : `${window.location.origin}/api/v1`,
 };
 
 /**
