@@ -37,11 +37,8 @@ def health_check():
 from app.api.auth import router as auth_router
 from app.api.settings import router as settings_router
 
-# Para compatibilidade com Vercel e local, incluímos as rotas com e sem prefixo
-# No Vercel, o caminho pode vir já "limpo" dependendo da regra de rewrite
+# Rotas organizadas por prefixo
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
-app.include_router(auth_router, tags=["Authentication"])
-
 app.include_router(settings_router, prefix="/api/v1/auth/user/settings", tags=["User Settings"])
-app.include_router(settings_router, prefix="/user/settings", tags=["User Settings"])
+
 

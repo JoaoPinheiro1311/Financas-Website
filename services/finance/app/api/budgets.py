@@ -5,8 +5,8 @@ import calendar
 
 router = APIRouter()
 
-@router.get("")
 @router.get("/")
+
 async def get_budgets(user_id: int, month: str = Query(None)):
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
@@ -51,8 +51,8 @@ async def get_budgets(user_id: int, month: str = Query(None)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("")
 @router.post("/")
+
 async def create_budget(user_id: int, data: dict = Body(...)):
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
