@@ -25,7 +25,6 @@ function FinancialHealth({ userData }) {
 
   useEffect(() => {
     fetchFinancialHealth()
-    fetchAIAnalysis()
   }, [userData])
 
   const fetchAIAnalysis = async () => {

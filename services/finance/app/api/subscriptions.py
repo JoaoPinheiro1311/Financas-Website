@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from app.infrastructure.supabase_client import supabase
+from app.utils.auth import get_current_user
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 router = APIRouter()
 
 @router.get("/")
-
-async def get_subscriptions(user_id: int):
+async def get_subscriptions(current_user: dict = Depends(get_current_user)):
+    user_id = current_user['user_id']
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
     
@@ -52,8 +53,8 @@ async def get_subscriptions(user_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/")
-
-async def create_subscription(user_id: int, data: dict = Body(...)):
+async def create_subscription(data: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    user_id = current_user['user_id']
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
     
@@ -75,7 +76,8 @@ async def create_subscription(user_id: int, data: dict = Body(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{sub_id}")
-async def update_subscription(user_id: int, sub_id: int, data: dict = Body(...)):
+async def update_subscription(sub_id: int, data: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    user_id = current_user['user_id']
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
     
@@ -100,7 +102,8 @@ async def update_subscription(user_id: int, sub_id: int, data: dict = Body(...))
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{sub_id}")
-async def delete_subscription(user_id: int, sub_id: int):
+async def delete_subscription(sub_id: int, current_user: dict = Depends(get_current_user)):
+    user_id = current_user['user_id']
     if not supabase:
         raise HTTPException(status_code=500, detail="Database not configured")
     

@@ -3,13 +3,10 @@ import { apiFetch } from '../../config/api'
 import { LoadingSpinner } from '../Skeleton'
 import { motion, AnimatePresence } from 'framer-motion'
 
-function SmartInsights({ userData }) {
+function SmartInsights({ userData, onOpenChat }) {
   const [insights, setInsights] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchSmartInsights()
-  }, [])
+  const [loading, setLoading] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   const fetchSmartInsights = async () => {
     try {
@@ -18,6 +15,7 @@ function SmartInsights({ userData }) {
       if (resp.ok) {
         const data = await resp.json()
         setInsights(data.insights || [])
+        setHasLoaded(true)
       }
     } catch (e) {
       console.error('Insights Fetch Error:', e)
@@ -33,6 +31,28 @@ function SmartInsights({ userData }) {
   ]
 
   if (loading) return <LoadingSpinner />
+
+  // Mostrar botão de gerar se ainda não carregou
+  if (!hasLoaded && !loading) return (
+    <div className="space-y-10 pb-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="max-w-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-2">Motor de Inteligência Preditiva</p>
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Smart Insights &amp; Projeções</h2>
+          <p className="text-slate-500 mt-4 text-lg leading-relaxed">Análise preditiva com IA baseada nos teus dados financeiros reais.</p>
+        </div>
+      </div>
+      <div className="bg-white rounded-2xl p-12 border border-gray-100 shadow-sm text-center">
+        <div className="text-5xl mb-4">🧘‍♂️</div>
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Pronto para analisar as tuas finanças?</h3>
+        <p className="text-slate-500 mb-6">A análise usa inteligência artificial para gerar insights personalizados com base nos teus dados.</p>
+        <button onClick={fetchSmartInsights}
+          className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20">
+          ✨ Gerar Insights com IA
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-10 pb-10">
@@ -145,8 +165,17 @@ function SmartInsights({ userData }) {
             </p>
           </div>
           <div className="relative z-10 mt-10">
-            <button className="px-6 py-3 bg-primary hover:bg-primary-dark rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
-              Solicitar Mentor
+            <button 
+              onClick={() => {
+                if (onOpenChat) onOpenChat()
+                else {
+                  // Abrir chatbot via DOM se disponível
+                  const chatBtn = document.querySelector('[title="Assistente Financeiro"]')
+                  if (chatBtn) chatBtn.click()
+                }
+              }}
+              className="px-6 py-3 bg-primary hover:bg-primary-dark rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+              💬 Falar com o Sensei
             </button>
           </div>
         </div>

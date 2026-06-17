@@ -52,10 +52,8 @@ export const apiFetch = (endpoint, options = {}) => {
       url = `${SERVICES.IDENTITY}${url.replace('/api/auth', '').replace('/api', '')}`
     } else if (url.startsWith('/api/savings-goals')) {
       url = `${SERVICES.GOALS}/goals/`
-    } else if (url.startsWith('/api/investments')) {
-      url = `${SERVICES.INVESTMENTS}/investments/`
-    } else if (url.startsWith('/api/stock')) {
-      url = `${SERVICES.INVESTMENTS}/investments/`
+    } else if (url.startsWith('/api/investments') || url.startsWith('/api/stock')) {
+      url = `${SERVICES.INVESTMENTS}${url.replace('/api', '')}`
     } else if (url.startsWith('/api/notifications')) {
       url = `${SERVICES.NOTIFICATIONS}/notifications/`
     } else if (url.startsWith('/api/activity-summary')) {

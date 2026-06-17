@@ -37,9 +37,19 @@ async def add_transaction(data: dict, current_user: dict = Depends(get_current_u
         raise HTTPException(status_code=500, detail="Database not configured")
     
     try:
-        # Ported logic from app.py
+        # Tipo de transação
         transaction_type = 'expense' if data.get('tipo') == 'despesa' else 'income'
-        
+
+        # Encontrar category_id pelo nome (silencioso em caso de erro)
+        category_id = None
+        if data.get('categoria'):
+            try:
+                cat_resp = supabase.table('categories').select('id').eq('name', data.get('categoria')).eq('user_id', user_id).limit(1).execute()
+                if cat_resp.data:
+                    category_id = cat_resp.data[0]['id']
+            except:
+                pass
+
         # Inserir transacao
         transaction_data = {
             'user_id': user_id,
@@ -47,8 +57,12 @@ async def add_transaction(data: dict, current_user: dict = Depends(get_current_u
             'amount': float(data['valor']),
             'currency': data.get('moeda', 'EUR'),
             'date': data['data'],
-            'notes': data.get('descricao', '')
+            'notes': data.get('descricao', '') or data.get('notas', ''),
         }
+        # Só incluir category_id se existir (evitar erros com NULL)
+        if category_id is not None:
+            transaction_data['category_id'] = category_id
+
         
         response = supabase.table('expenses').insert(transaction_data).execute()
         

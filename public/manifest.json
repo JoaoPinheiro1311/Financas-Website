@@ -1,0 +1,40 @@
+{
+  "name": "FinanceLog — Gestor Financeiro",
+  "short_name": "FinanceLog",
+  "description": "Gere as tuas finanças pessoais com IA integrada",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "lang": "pt-PT",
+  "shortcuts": [
+    {
+      "name": "Adicionar Transação",
+      "short_name": "Adicionar",
+      "url": "/?tab=add",
+      "description": "Registar nova transação"
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/?tab=activity",
+      "description": "Ver atividade financeira"
+    }
+  ]
+}

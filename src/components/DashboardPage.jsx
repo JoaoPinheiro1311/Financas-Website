@@ -16,6 +16,7 @@ import SmartInsights from './dashboard/SmartInsights'
 import CompoundSimulator from './dashboard/CompoundSimulator'
 import DebtVsInvestment from './dashboard/DebtVsInvestment'
 import CurrencyConverter from './dashboard/CurrencyConverter'
+import BalanceChart from './dashboard/BalanceChart'
 import FinanceAIChatbot from './FinanceAIChatbot'
 import { useTickerData } from '../hooks/useTickerData'
 
@@ -27,10 +28,6 @@ function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSimTab, setActiveSimTab] = useState('compound')
   const navigate = useNavigate()
-
-  // Make sim tab accessible to sub-components if needed
-  window.activeSimTab = activeSimTab
-  window.setSimTab = setActiveSimTab
 
   useEffect(() => {
     checkLoginStatus()
@@ -275,7 +272,7 @@ function DashboardPage() {
 
             {/* Wisdom */}
             <div className="flex items-center gap-4">
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="hidden lg:flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl"
               >
@@ -298,40 +295,45 @@ function DashboardPage() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
             >
-              {activeTab === 'activity' && <FinancialActivity userData={userData} />}
+              {activeTab === 'activity' && (
+                <div className="space-y-8">
+                  <FinancialActivity userData={userData} />
+                  <BalanceChart userData={userData} />
+                </div>
+              )}
               {activeTab === 'savings' && <SavingsGoals userData={userData} />}
               {activeTab === 'health' && <FinancialHealth userData={userData} />}
               {activeTab === 'investments' && <StockInvestments userData={userData} />}
               {activeTab === 'subscriptions' && <Subscriptions userData={userData} />}
               {activeTab === 'export' && <ExportReports />}
               {activeTab === 'add' && <AddTransaction userData={userData} />}
-              {activeTab === 'insights' && <SmartInsights userData={userData} />}
+              {activeTab === 'insights' && <SmartInsights userData={userData} onOpenChat={() => {}} />}
               {activeTab === 'profile' && <Profile userData={userData} />}
               {activeTab === 'simulator' && (
                 <div className="space-y-6">
                    <div className="flex gap-4 p-1.5 bg-slate-200/50 rounded-2xl w-fit backdrop-blur-sm border border-slate-200">
                       <button 
-                        onClick={() => window.setSimTab('compound')} 
-                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${(!window.activeSimTab || window.activeSimTab === 'compound') ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveSimTab('compound')} 
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeSimTab === 'compound' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Juros Compostos
                       </button>
                       <button 
-                        onClick={() => window.setSimTab('debt')} 
-                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${window.activeSimTab === 'debt' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveSimTab('debt')} 
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeSimTab === 'debt' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Dívida vs Invest.
                       </button>
                       <button 
-                        onClick={() => window.setSimTab('converter')} 
-                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${window.activeSimTab === 'converter' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveSimTab('converter')} 
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeSimTab === 'converter' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Conversor
                       </button>
                    </div>
-                   {(!window.activeSimTab || window.activeSimTab === 'compound') && <CompoundSimulator />}
-                   {window.activeSimTab === 'debt' && <DebtVsInvestment />}
-                   {window.activeSimTab === 'converter' && <CurrencyConverter />}
+                   {activeSimTab === 'compound' && <CompoundSimulator />}
+                   {activeSimTab === 'debt' && <DebtVsInvestment />}
+                   {activeSimTab === 'converter' && <CurrencyConverter />}
                 </div>
               )}
               {activeTab === 'system' && <ServiceHealth />}

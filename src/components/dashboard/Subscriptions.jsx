@@ -111,9 +111,12 @@ export default function Subscriptions() {
     const fetchSubs = useCallback(async () => {
         setLoading(true)
         try {
-            const data = await apiFetch('/api/subscriptions')
-            setSubscriptions(data.subscriptions || [])
-            setTotalMonthly(data.total_monthly || 0)
+            const response = await apiFetch('/api/subscriptions')
+            if (response.ok) {
+                const data = await response.json()
+                setSubscriptions(data.subscriptions || [])
+                setTotalMonthly(data.total_monthly || 0)
+            }
         } catch (e) { console.error(e) } finally { setLoading(false) }
     }, [])
 

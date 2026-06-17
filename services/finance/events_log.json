@@ -1,0 +1,4 @@
+{"type": "transaction_created", "data": {"user_id": 3, "amount": 100000.0, "type": "expense"}}
+{"type": "gain_xp", "data": {"user_id": 3, "xp": 15}}
+{"type": "transaction_created", "data": {"user_id": 3, "amount": 250000.0, "type": "income"}}
+{"type": "gain_xp", "data": {"user_id": 3, "xp": 15}}

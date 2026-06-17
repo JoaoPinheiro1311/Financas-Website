@@ -69,7 +69,7 @@ async def add_investment(data: dict, current_user: dict = Depends(get_current_us
         investment_data = {
             'user_id': user_id,
             'symbol': data['symbol'],
-            'market': data.get('market', 'STK'),
+            'market': data.get('market', 'stock').lower() if data.get('market') not in ['STK', 'stock'] else 'stock',
             'quantity': float(data.get('quantity', 0)),
             'avg_price': float(data.get('purchase_price', 0)),
             'last_price': float(data.get('purchase_price', 0)),
@@ -80,4 +80,30 @@ async def add_investment(data: dict, current_user: dict = Depends(get_current_us
             return {"investment": response.data[0]}
         raise HTTPException(status_code=400, detail="Failed to create investment")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        err = traceback.format_exc()
+        raise HTTPException(status_code=500, detail=str(err))
+
+@router.get("/search")
+async def search_stocks(q: str):
+    mock_stocks = [
+        {"symbol": "AAPL", "name": "Apple Inc."},
+        {"symbol": "TSLA", "name": "Tesla Inc."},
+        {"symbol": "MSFT", "name": "Microsoft Corp."},
+        {"symbol": "GOOGL", "name": "Alphabet Inc."},
+        {"symbol": "AMZN", "name": "Amazon.com Inc."},
+        {"symbol": "NVDA", "name": "NVIDIA Corp."},
+        {"symbol": "META", "name": "Meta Platforms Inc."},
+        {"symbol": "NFLX", "name": "Netflix Inc."},
+        {"symbol": "BTC", "name": "Bitcoin"},
+        {"symbol": "ETH", "name": "Ethereum"},
+        {"symbol": "SOL", "name": "Solana"},
+    ]
+    results = [s for s in mock_stocks if q.upper() in s["symbol"] or q.lower() in s["name"].lower()]
+    return {"results": results}
+
+@router.get("/price/{symbol}")
+async def get_stock_price(symbol: str):
+    import random
+    # Retorna um preço simulado entre 50 e 500 para testes
+    return {"price": round(random.uniform(50, 500), 2)}

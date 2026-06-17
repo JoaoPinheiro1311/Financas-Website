@@ -117,6 +117,7 @@ async def get_financial_health(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/analysis")
 async def get_ai_analysis(current_user: dict = Depends(get_current_user)):
     """Gera um relatório de análise financeira usando IA (Gemini)"""
@@ -142,7 +143,7 @@ async def get_ai_analysis(current_user: dict = Depends(get_current_user)):
         
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-2.5-flash",
             contents=prompt
         )
         return {"analysis": response.text}
@@ -177,7 +178,7 @@ async def get_smart_insights(current_user: dict = Depends(get_current_user)):
         
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-2.5-flash",
             contents=prompt
         )
         

@@ -31,7 +31,7 @@ function StockInvestments({ userData }) {
   const fetchInvestmentsFromDB = async () => {
     setLoading(true)
     try {
-      const response = await apiFetch('/api/investments/stocks', {
+      const response = await apiFetch('/api/investments', {
         method: 'GET',
         credentials: 'include',
       })
@@ -122,7 +122,7 @@ function StockInvestments({ userData }) {
 
     setSearching(true)
     try {
-      const response = await apiFetch(`/api/stocks/search?q=${query}`)
+      const response = await apiFetch(`/api/investments/search?q=${query}`)
       if (response.ok) {
         const data = await response.json()
         setSearchResults(data.results || [])
@@ -152,7 +152,7 @@ function StockInvestments({ userData }) {
 
     // Buscar preço atual para sugestão
     try {
-      const response = await apiFetch(`/api/stock/${symbol}`)
+      const response = await apiFetch(`/api/investments/price/${symbol}`)
       if (response.ok) {
         const data = await response.json()
         setNewInvestment(prev => ({ ...prev, precoCompra: data.price.toFixed(2) }))
@@ -199,7 +199,7 @@ function StockInvestments({ userData }) {
       }
 
       try {
-        const response = await apiFetch('/api/investments/stocks', {
+        const response = await apiFetch('/api/investments', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
