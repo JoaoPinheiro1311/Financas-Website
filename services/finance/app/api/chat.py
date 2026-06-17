@@ -88,7 +88,7 @@ async def chat(user_id: int, data: dict = Body(...)):
         messages.append(genai.types.Content(role='user', parts=[genai.types.Part(text=user_message)]))
         
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-2.5-flash",
             contents=messages,
             config=genai.types.GenerateContentConfig(
                 system_instruction=system_instruction,

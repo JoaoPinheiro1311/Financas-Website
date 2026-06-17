@@ -70,6 +70,8 @@ export const apiFetch = (endpoint, options = {}) => {
       url = `${SERVICES.FINANCE}/summary/analysis`
     } else if (url.startsWith('/api/categories')) {
       url = `${SERVICES.FINANCE}/categories/`
+    } else if (url.startsWith('/api/chat')) {
+      url = `${SERVICES.FINANCE}/chat/`
     } else {
       url = `${SERVICES.FINANCE}${url.replace('/api', '')}`
     }
